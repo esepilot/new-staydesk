@@ -57,36 +57,58 @@ class Staydesk_Auth {
      * Handle user signup.
      */
     public function handle_signup() {
-        check_ajax_referer('staydesk_nonce', 'nonce');
+        // Log the request for debugging
+        error_log('StayDesk Signup: Request received');
+        
+        // Verify nonce
+        try {
+            check_ajax_referer('staydesk_nonce', 'nonce');
+        } catch (Exception $e) {
+            error_log('StayDesk Signup: Nonce verification failed - ' . $e->getMessage());
+            wp_send_json_error(array('message' => 'Security verification failed. Please refresh and try again.'));
+            return;
+        }
 
         global $wpdb;
 
         // Sanitize input
-        $hotel_name = sanitize_text_field($_POST['hotel_name']);
-        $email = sanitize_email($_POST['email']);
-        $password = $_POST['password'];
-        $phone = sanitize_text_field($_POST['phone']);
+        $hotel_name = isset($_POST['hotel_name']) ? sanitize_text_field($_POST['hotel_name']) : '';
+        $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+        $password = isset($_POST['password']) ? $_POST['password'] : '';
+        $phone = isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '';
+
+        error_log("StayDesk Signup: Processing for hotel: $hotel_name, email: $email");
 
         // Validate input
         if (empty($hotel_name) || empty($email) || empty($password)) {
+            error_log('StayDesk Signup: Validation failed - missing required fields');
             wp_send_json_error(array('message' => 'All fields are required.'));
+            return;
         }
 
         if (!is_email($email)) {
+            error_log('StayDesk Signup: Validation failed - invalid email');
             wp_send_json_error(array('message' => 'Invalid email address.'));
+            return;
         }
 
         // Check if email already exists
         if (email_exists($email)) {
+            error_log('StayDesk Signup: Validation failed - email already exists');
             wp_send_json_error(array('message' => 'Email already registered.'));
+            return;
         }
 
         // Create WordPress user
         $user_id = wp_create_user($email, $password, $email);
 
         if (is_wp_error($user_id)) {
+            error_log('StayDesk Signup: User creation failed - ' . $user_id->get_error_message());
             wp_send_json_error(array('message' => $user_id->get_error_message()));
+            return;
         }
+
+        error_log("StayDesk Signup: User created with ID: $user_id");
 
         // Update user meta
         wp_update_user(array(
@@ -107,9 +129,11 @@ class Staydesk_Auth {
             update_option('staydesk_hotel_count', $hotel_count + 1);
         }
 
+        error_log("StayDesk Signup: Hotel count: $hotel_count, discount applied: $discount_applied");
+
         // Create hotel record
         $table_hotels = $wpdb->prefix . 'staydesk_hotels';
-        $wpdb->insert($table_hotels, array(
+        $insert_result = $wpdb->insert($table_hotels, array(
             'user_id' => $user_id,
             'hotel_name' => $hotel_name,
             'hotel_email' => $email,
@@ -119,12 +143,21 @@ class Staydesk_Auth {
             'subscription_status' => 'inactive'
         ));
 
+        if ($insert_result === false) {
+            error_log('StayDesk Signup: Hotel record creation failed - ' . $wpdb->last_error);
+            // Don't fail the signup, just log the error
+        } else {
+            error_log('StayDesk Signup: Hotel record created successfully');
+        }
+
         // Generate confirmation token
         $token = wp_generate_password(32, false);
         update_user_meta($user_id, 'staydesk_email_token', $token);
 
         // Send confirmation email
         $this->send_confirmation_email($email, $hotel_name, $token);
+
+        error_log('StayDesk Signup: Success - confirmation email sent');
 
         wp_send_json_success(array(
             'message' => 'Registration successful! Please check your email to confirm your account.',
@@ -136,28 +169,47 @@ class Staydesk_Auth {
      * Handle user login.
      */
     public function handle_login() {
-        check_ajax_referer('staydesk_nonce', 'nonce');
+        error_log('StayDesk Login: Request received');
+        
+        // Verify nonce
+        try {
+            check_ajax_referer('staydesk_nonce', 'nonce');
+        } catch (Exception $e) {
+            error_log('StayDesk Login: Nonce verification failed - ' . $e->getMessage());
+            wp_send_json_error(array('message' => 'Security verification failed. Please refresh and try again.'));
+            return;
+        }
 
         global $wpdb;
 
-        $email = sanitize_email($_POST['email']);
-        $password = $_POST['password'];
+        $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+        $password = isset($_POST['password']) ? $_POST['password'] : '';
         $remember = isset($_POST['remember']) ? true : false;
 
+        error_log("StayDesk Login: Attempting login for email: $email");
+
         if (empty($email) || empty($password)) {
+            error_log('StayDesk Login: Validation failed - missing credentials');
             wp_send_json_error(array('message' => 'Email and password are required.'));
+            return;
         }
 
         // Get user
         $user = get_user_by('email', $email);
 
         if (!$user) {
+            error_log('StayDesk Login: User not found');
             wp_send_json_error(array('message' => 'Invalid email or password.'));
+            return;
         }
+
+        error_log("StayDesk Login: User found with ID: {$user->ID}");
 
         // Check password
         if (!wp_check_password($password, $user->data->user_pass, $user->ID)) {
+            error_log('StayDesk Login: Password verification failed');
             wp_send_json_error(array('message' => 'Invalid email or password.'));
+            return;
         }
 
         // Check if email is confirmed
@@ -168,7 +220,9 @@ class Staydesk_Auth {
         ));
 
         if ($hotel && !$hotel->email_confirmed) {
+            error_log('StayDesk Login: Email not confirmed');
             wp_send_json_error(array('message' => 'Please confirm your email before logging in.'));
+            return;
         }
 
         // Log the user in
@@ -181,6 +235,8 @@ class Staydesk_Auth {
         }
         $_SESSION['staydesk_user_id'] = $user->ID;
         $_SESSION['staydesk_hotel_id'] = $hotel ? $hotel->id : 0;
+
+        error_log('StayDesk Login: Success');
 
         wp_send_json_success(array(
             'message' => 'Login successful!',

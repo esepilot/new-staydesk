@@ -235,67 +235,105 @@
         </div>
     </div>
     
+    <?php wp_enqueue_script('jquery'); ?>
     <script>
-        jQuery(document).ready(function($) {
-            $('#staydesk-signup-form').on('submit', function(e) {
-                e.preventDefault();
-                
-                var $btn = $('#signup-btn');
-                var $alert = $('#signup-alert');
-                var password = $('#password').val();
-                var confirmPassword = $('#confirm_password').val();
-                
-                // Validate passwords match
-                if (password !== confirmPassword) {
-                    $alert.removeClass('alert-success').addClass('alert-error')
-                          .text('Passwords do not match.').show();
-                    return;
+        (function() {
+            // Wait for jQuery to be available
+            var checkJQuery = setInterval(function() {
+                if (typeof jQuery !== 'undefined') {
+                    clearInterval(checkJQuery);
+                    initSignupForm();
                 }
-                
-                $btn.prop('disabled', true).text('Creating account...');
-                $alert.hide();
-                
-                $.ajax({
-                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                    type: 'POST',
-                    data: {
-                        action: 'staydesk_signup',
-                        nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
-                        hotel_name: $('#hotel_name').val(),
-                        email: $('#email').val(),
-                        phone: $('#phone').val(),
-                        password: password
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            $alert.removeClass('alert-error').addClass('alert-success')
-                                  .text(response.data.message).show();
-                            
-                            setTimeout(function() {
-                                window.location.href = response.data.redirect;
-                            }, 2000);
-                        } else {
+            }, 100);
+            
+            function initSignupForm() {
+                jQuery(document).ready(function($) {
+                    console.log('StayDesk Signup Form Initialized');
+                    console.log('AJAX URL:', '<?php echo admin_url('admin-ajax.php'); ?>');
+                    
+                    $('#staydesk-signup-form').on('submit', function(e) {
+                        e.preventDefault();
+                        console.log('Form submitted');
+                        
+                        var $btn = $('#signup-btn');
+                        var $alert = $('#signup-alert');
+                        var password = $('#password').val();
+                        var confirmPassword = $('#confirm_password').val();
+                        
+                        // Validate passwords match
+                        if (password !== confirmPassword) {
                             $alert.removeClass('alert-success').addClass('alert-error')
-                                  .text(response.data.message || 'An error occurred. Please try again.').show();
-                            $btn.prop('disabled', false).text('Create Account');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Signup error:', status, error);
-                        var errorMessage = 'An error occurred. Please try again.';
-                        
-                        // Try to get more specific error message
-                        if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
-                            errorMessage = xhr.responseJSON.data.message;
+                                  .text('Passwords do not match.').show();
+                            return;
                         }
                         
-                        $alert.removeClass('alert-success').addClass('alert-error')
-                              .text(errorMessage).show();
-                        $btn.prop('disabled', false).text('Create Account');
-                    }
+                        $btn.prop('disabled', true).text('Creating account...');
+                        $alert.hide();
+                        
+                        var ajaxData = {
+                            action: 'staydesk_signup',
+                            nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                            hotel_name: $('#hotel_name').val(),
+                            email: $('#email').val(),
+                            phone: $('#phone').val(),
+                            password: password
+                        };
+                        
+                        console.log('Sending AJAX request with data:', ajaxData);
+                        
+                        $.ajax({
+                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                            type: 'POST',
+                            data: ajaxData,
+                            success: function(response) {
+                                console.log('AJAX Success:', response);
+                                if (response.success) {
+                                    $alert.removeClass('alert-error').addClass('alert-success')
+                                          .text(response.data.message).show();
+                                    
+                                    setTimeout(function() {
+                                        window.location.href = response.data.redirect;
+                                    }, 2000);
+                                } else {
+                                    $alert.removeClass('alert-success').addClass('alert-error')
+                                          .text(response.data.message || 'An error occurred. Please try again.').show();
+                                    $btn.prop('disabled', false).text('Create Account');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('AJAX Error:', {
+                                    status: status,
+                                    error: error,
+                                    responseText: xhr.responseText,
+                                    response: xhr.responseJSON
+                                });
+                                
+                                var errorMessage = 'An error occurred. Please try again.';
+                                
+                                // Try to parse error response
+                                try {
+                                    if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+                                        errorMessage = xhr.responseJSON.data.message;
+                                    } else if (xhr.responseText) {
+                                        // Try to extract error from HTML response
+                                        var match = xhr.responseText.match(/<body[^>]*>(.*?)<\/body>/is);
+                                        if (match) {
+                                            errorMessage = 'Server error. Please check console for details.';
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.error('Error parsing response:', e);
+                                }
+                                
+                                $alert.removeClass('alert-success').addClass('alert-error')
+                                      .text(errorMessage).show();
+                                $btn.prop('disabled', false).text('Create Account');
+                            }
+                        });
+                    });
                 });
-            });
-        });
+            }
+        })();
     </script>
 </body>
 </html>

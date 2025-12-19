@@ -247,57 +247,91 @@
         </div>
     </div>
     
+    <?php wp_enqueue_script('jquery'); ?>
     <script>
-        jQuery(document).ready(function($) {
-            $('#staydesk-login-form').on('submit', function(e) {
-                e.preventDefault();
-                
-                var $btn = $('#login-btn');
-                var $alert = $('#login-alert');
-                
-                $btn.prop('disabled', true).text('Logging in...');
-                $alert.hide();
-                
-                $.ajax({
-                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                    type: 'POST',
-                    data: {
-                        action: 'staydesk_login',
-                        nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
-                        email: $('#email').val(),
-                        password: $('#password').val(),
-                        remember: $('#remember').is(':checked')
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            $alert.removeClass('alert-error').addClass('alert-success')
-                                  .text(response.data.message).show();
-                            
-                            setTimeout(function() {
-                                window.location.href = response.data.redirect;
-                            }, 1000);
-                        } else {
-                            $alert.removeClass('alert-success').addClass('alert-error')
-                                  .text(response.data.message || 'An error occurred. Please try again.').show();
-                            $btn.prop('disabled', false).text('Login');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Login error:', status, error);
-                        var errorMessage = 'An error occurred. Please try again.';
+        (function() {
+            // Wait for jQuery to be available
+            var checkJQuery = setInterval(function() {
+                if (typeof jQuery !== 'undefined') {
+                    clearInterval(checkJQuery);
+                    initLoginForm();
+                }
+            }, 100);
+            
+            function initLoginForm() {
+                jQuery(document).ready(function($) {
+                    console.log('StayDesk Login Form Initialized');
+                    console.log('AJAX URL:', '<?php echo admin_url('admin-ajax.php'); ?>');
+                    
+                    $('#staydesk-login-form').on('submit', function(e) {
+                        e.preventDefault();
+                        console.log('Login form submitted');
                         
-                        // Try to get more specific error message
-                        if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
-                            errorMessage = xhr.responseJSON.data.message;
-                        }
+                        var $btn = $('#login-btn');
+                        var $alert = $('#login-alert');
                         
-                        $alert.removeClass('alert-success').addClass('alert-error')
-                              .text(errorMessage).show();
-                        $btn.prop('disabled', false).text('Login');
-                    }
+                        $btn.prop('disabled', true).text('Logging in...');
+                        $alert.hide();
+                        
+                        var ajaxData = {
+                            action: 'staydesk_login',
+                            nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                            email: $('#email').val(),
+                            password: $('#password').val(),
+                            remember: $('#remember').is(':checked')
+                        };
+                        
+                        console.log('Sending login AJAX request');
+                        
+                        $.ajax({
+                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                            type: 'POST',
+                            data: ajaxData,
+                            success: function(response) {
+                                console.log('Login AJAX Success:', response);
+                                if (response.success) {
+                                    $alert.removeClass('alert-error').addClass('alert-success')
+                                          .text(response.data.message).show();
+                                    
+                                    setTimeout(function() {
+                                        window.location.href = response.data.redirect;
+                                    }, 1500);
+                                } else {
+                                    $alert.removeClass('alert-success').addClass('alert-error')
+                                          .text(response.data.message || 'An error occurred. Please try again.').show();
+                                    $btn.prop('disabled', false).text('Login');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error('Login AJAX Error:', {
+                                    status: status,
+                                    error: error,
+                                    responseText: xhr.responseText,
+                                    response: xhr.responseJSON
+                                });
+                                
+                                var errorMessage = 'An error occurred. Please try again.';
+                                
+                                // Try to parse error response
+                                try {
+                                    if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+                                        errorMessage = xhr.responseJSON.data.message;
+                                    } else if (xhr.responseText) {
+                                        errorMessage = 'Server error. Please check console for details.';
+                                    }
+                                } catch (e) {
+                                    console.error('Error parsing response:', e);
+                                }
+                                
+                                $alert.removeClass('alert-success').addClass('alert-error')
+                                      .text(errorMessage).show();
+                                $btn.prop('disabled', false).text('Login');
+                            }
+                        });
+                    });
                 });
-            });
-        });
+            }
+        })();
     </script>
 </body>
 </html>
