@@ -265,32 +265,47 @@
     </div>
     
     <script>
+        <?php wp_enqueue_script('jquery'); ?>
         jQuery(document).ready(function($) {
             $('.btn-subscribe').on('click', function() {
                 var plan = $(this).data('plan');
                 var $btn = $(this);
                 
+                // Check if user is logged in
+                <?php if (!is_user_logged_in()): ?>
+                    alert('Please login to subscribe.');
+                    window.location.href = '<?php echo home_url('/staydesk-login'); ?>';
+                    return;
+                <?php endif; ?>
+                
                 $btn.prop('disabled', true).text('Processing...');
                 
                 $.ajax({
-                    url: staydesk_ajax.ajax_url,
+                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
                     type: 'POST',
                     data: {
                         action: 'staydesk_subscribe',
-                        nonce: staydesk_ajax.nonce,
+                        nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
                         plan_type: plan
                     },
                     success: function(response) {
+                        console.log('Subscribe response:', response);
                         if (response.success) {
                             // Redirect to Paystack payment page
-                            window.location.href = response.data.authorization_url;
+                            if (response.data && response.data.authorization_url) {
+                                window.location.href = response.data.authorization_url;
+                            } else {
+                                alert('Payment initialization failed.');
+                                $btn.prop('disabled', false).text('Subscribe Now');
+                            }
                         } else {
-                            alert(response.data.message);
+                            alert(response.data.message || 'Failed to initialize payment.');
                             $btn.prop('disabled', false).text('Subscribe Now');
                         }
                     },
-                    error: function() {
-                        alert('An error occurred. Please try again.');
+                    error: function(xhr, status, error) {
+                        console.error('Subscribe error:', error);
+                        alert('Failed to initialize payment. Please try again.');
                         $btn.prop('disabled', false).text('Subscribe Now');
                     }
                 });

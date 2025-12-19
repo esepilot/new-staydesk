@@ -11,11 +11,23 @@ class Staydesk_Rooms {
      * Initialize the class.
      */
     public function __construct() {
+        add_shortcode('staydesk_rooms', array($this, 'render_rooms'));
+        
         // AJAX handlers
         add_action('wp_ajax_staydesk_add_room', array($this, 'add_room'));
         add_action('wp_ajax_staydesk_update_room', array($this, 'update_room'));
+        add_action('wp_ajax_staydesk_update_room_status', array($this, 'update_room_status'));
         add_action('wp_ajax_staydesk_delete_room', array($this, 'delete_room'));
         add_action('wp_ajax_staydesk_get_available_rooms', array($this, 'get_available_rooms'));
+    }
+    
+    /**
+     * Render rooms page.
+     */
+    public function render_rooms() {
+        ob_start();
+        include STAYDESK_PLUGIN_DIR . 'templates/rooms.php';
+        return ob_get_clean();
     }
 
     /**
@@ -102,6 +114,31 @@ class Staydesk_Rooms {
         );
 
         wp_send_json_success(array('message' => 'Room updated successfully!'));
+    }
+    
+    /**
+     * Update room status.
+     */
+    public function update_room_status() {
+        check_ajax_referer('staydesk_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Access denied.'));
+        }
+
+        global $wpdb;
+
+        $room_id = intval($_POST['room_id']);
+        $status = sanitize_text_field($_POST['status']);
+
+        $table_rooms = $wpdb->prefix . 'staydesk_rooms';
+        $wpdb->update(
+            $table_rooms,
+            array('availability_status' => $status),
+            array('id' => $room_id)
+        );
+
+        wp_send_json_success(array('message' => 'Room status updated successfully!'));
     }
 
     /**

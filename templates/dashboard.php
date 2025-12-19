@@ -332,7 +332,7 @@ $dashboard_data = Staydesk_Dashboard::get_dashboard_data($hotel->id);
             <div class="section-card">
                 <h2>🛏️ Rooms Management</h2>
                 <p>Add, edit, or remove rooms. Set pricing and availability.</p>
-                <a href="#" class="btn-section">Manage Rooms</a>
+                <a href="<?php echo home_url('/staydesk-rooms'); ?>" class="btn-section">Manage Rooms</a>
             </div>
             
             <div class="section-card">

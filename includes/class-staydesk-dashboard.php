@@ -13,6 +13,11 @@ class Staydesk_Dashboard {
     public function init() {
         add_shortcode('staydesk_dashboard', array($this, 'render_dashboard'));
         add_shortcode('staydesk_homepage', array($this, 'render_homepage'));
+        add_shortcode('staydesk_profile', array($this, 'render_profile'));
+        add_shortcode('staydesk_bookings', array($this, 'render_bookings'));
+        
+        // AJAX handlers
+        add_action('wp_ajax_staydesk_update_profile', array($this, 'update_profile'));
     }
 
     /**
@@ -35,6 +40,63 @@ class Staydesk_Dashboard {
         ob_start();
         include STAYDESK_PLUGIN_DIR . 'templates/homepage.php';
         return ob_get_clean();
+    }
+    
+    /**
+     * Render profile page.
+     */
+    public function render_profile() {
+        ob_start();
+        include STAYDESK_PLUGIN_DIR . 'templates/profile.php';
+        return ob_get_clean();
+    }
+    
+    /**
+     * Render bookings page.
+     */
+    public function render_bookings() {
+        ob_start();
+        include STAYDESK_PLUGIN_DIR . 'templates/bookings.php';
+        return ob_get_clean();
+    }
+    
+    /**
+     * Update hotel profile.
+     */
+    public function update_profile() {
+        check_ajax_referer('staydesk_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Access denied.'));
+        }
+
+        global $wpdb;
+
+        $hotel_id = intval($_POST['hotel_id']);
+        $hotel_name = sanitize_text_field($_POST['hotel_name']);
+        $contact_email = sanitize_email($_POST['contact_email']);
+        $phone_number = sanitize_text_field($_POST['phone_number']);
+        $address = sanitize_text_field($_POST['address'] ?? '');
+        $city = sanitize_text_field($_POST['city'] ?? '');
+        $state = sanitize_text_field($_POST['state'] ?? '');
+        $description = sanitize_textarea_field($_POST['description'] ?? '');
+
+        $table_hotels = $wpdb->prefix . 'staydesk_hotels';
+        $wpdb->update(
+            $table_hotels,
+            array(
+                'hotel_name' => $hotel_name,
+                'contact_email' => $contact_email,
+                'phone_number' => $phone_number,
+                'address' => $address,
+                'city' => $city,
+                'state' => $state,
+                'description' => $description
+            ),
+            array('id' => $hotel_id)
+        );
+
+        wp_send_json_success(array('message' => 'Profile updated successfully!'));
     }
 
     /**
