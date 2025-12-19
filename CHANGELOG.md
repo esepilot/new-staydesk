@@ -12,7 +12,7 @@ All notable changes to StayDesk will be documented in this file.
 - Room management functionality
 - Paystack payment integration for Nigerian Naira (NGN)
 - Subscription system (Monthly: ₦49,900, Yearly: ₦598,800)
-- 10% discount for first 10 hotels
+- 10% discount for first 10 hotels (yearly plan only)
 - AI chatbot with bilingual support (English & Nigerian Pidgin)
 - Email notifications system
 - WhatsApp integration for guest notifications

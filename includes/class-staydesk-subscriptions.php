@@ -68,7 +68,8 @@ class Staydesk_Subscriptions {
         $base_price = ($plan_type === 'monthly') ? self::MONTHLY_PRICE : self::YEARLY_PRICE;
         $discount = 0;
 
-        if ($hotel->discount_applied) {
+        // Apply discount only for yearly plan and if eligible
+        if ($plan_type === 'yearly' && $hotel->discount_applied) {
             $discount = $base_price * (self::DISCOUNT_PERCENTAGE / 100);
         }
 

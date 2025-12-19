@@ -6,17 +6,18 @@
     <style>
         .staydesk-homepage {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a;
         }
         
         .hero-section {
-            min-height: 80vh;
-            background: linear-gradient(135deg, #0066CC 0%, #004C99 100%);
+            min-height: 90vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 60px 20px;
+            padding: 80px 20px;
             position: relative;
             overflow: hidden;
         }
@@ -24,76 +25,124 @@
         .hero-section::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><path fill="rgba(255,255,255,0.05)" d="M0,300 Q300,200 600,300 T1200,300 L1200,600 L0,600 Z"/></svg>') no-repeat bottom;
-            opacity: 0.3;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.1); opacity: 0.5; }
         }
         
         .hero-content {
             position: relative;
-            z-index: 1;
-            animation: fadeInUp 1s ease-out;
+            z-index: 2;
+            animation: fadeInUp 1.2s ease-out;
         }
         
         .hero-content h1 {
-            font-size: 4rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            line-height: 1.2;
+            font-size: 5rem;
+            font-weight: 900;
+            margin-bottom: 30px;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 50%, #D4AF37 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+            text-shadow: 0 0 60px rgba(212, 175, 55, 0.3);
         }
         
         .hero-content p {
-            font-size: 1.5rem;
-            margin-bottom: 40px;
+            font-size: 1.6rem;
+            margin-bottom: 50px;
+            color: #E8E8E8;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
             opacity: 0.95;
         }
         
         .cta-buttons {
             display: flex;
-            gap: 20px;
+            gap: 25px;
             justify-content: center;
             flex-wrap: wrap;
         }
         
         .btn-primary, .btn-secondary {
-            padding: 16px 40px;
-            font-size: 1.1rem;
-            border-radius: 30px;
+            padding: 18px 50px;
+            font-size: 1.15rem;
+            border-radius: 12px;
             text-decoration: none;
             display: inline-block;
-            transition: all 0.3s ease;
-            font-weight: 600;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary::before, .btn-secondary::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn-primary:hover::before, .btn-secondary:hover::before {
+            width: 400px;
+            height: 400px;
         }
         
         .btn-primary {
-            background: #D4AF37;
-            color: #333;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            color: #000;
+            box-shadow: 0 6px 30px rgba(212, 175, 55, 0.4);
         }
         
         .btn-primary:hover {
-            background: #F0C650;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 50px rgba(212, 175, 55, 0.6);
         }
         
         .btn-secondary {
             background: transparent;
-            color: white;
-            border: 2px solid white;
+            color: #D4AF37;
+            border: 2px solid #D4AF37;
         }
         
         .btn-secondary:hover {
-            background: white;
-            color: #0066CC;
-            transform: translateY(-2px);
+            background: #D4AF37;
+            color: #000;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 35px rgba(212, 175, 55, 0.4);
         }
         
         .features-section {
-            padding: 100px 20px;
-            background: #f8f9fa;
+            padding: 120px 20px;
+            background: #0a0a0a;
+            position: relative;
+        }
+        
+        .features-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.5), transparent);
         }
         
         .container {
@@ -103,45 +152,75 @@
         
         .section-title {
             text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 60px;
-            color: #333;
+            font-size: 3rem;
+            margin-bottom: 80px;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            letter-spacing: -1px;
         }
         
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 45px;
         }
         
         .feature-card {
-            background: white;
-            padding: 40px;
+            background: #1a1a1a;
+            padding: 45px;
             border-radius: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-            animation: fadeIn 0.6s ease-out;
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeIn 0.8s ease-out;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            position: relative;
+        }
+        
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #D4AF37, #FFD700);
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: -1;
+        }
+        
+        .feature-card:hover::before {
+            opacity: 0.3;
         }
         
         .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            transform: translateY(-12px);
+            box-shadow: 0 20px 60px rgba(212, 175, 55, 0.4);
+            background: #2a2a2a;
         }
         
         .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
+            font-size: 3.5rem;
+            margin-bottom: 25px;
+            filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
         }
         
         .feature-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            color: #0066CC;
+            font-size: 1.6rem;
+            margin-bottom: 18px;
+            color: #D4AF37;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }
         
         .feature-card p {
-            color: #666;
-            line-height: 1.6;
+            color: #A0A0A0;
+            line-height: 1.7;
+            font-size: 1.05rem;
         }
         
         @keyframes fadeInUp {

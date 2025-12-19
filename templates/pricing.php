@@ -6,147 +6,202 @@
     <style>
         .staydesk-pricing {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f7fa;
-            padding: 60px 20px;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            padding: 80px 20px;
             min-height: 100vh;
         }
         
         .pricing-header {
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 80px;
         }
         
         .pricing-header h1 {
-            font-size: 3rem;
-            color: #0066CC;
-            margin-bottom: 15px;
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            font-weight: 800;
+            letter-spacing: -1px;
         }
         
         .pricing-header p {
-            font-size: 1.2rem;
-            color: #666;
+            font-size: 1.3rem;
+            color: #A0A0A0;
         }
         
         .pricing-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 40px;
-            max-width: 1000px;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 50px;
+            max-width: 1100px;
             margin: 0 auto;
         }
         
         .pricing-card {
-            background: white;
-            padding: 50px 40px;
-            border-radius: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            background: #1a1a1a;
+            padding: 55px 45px;
+            border-radius: 24px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        
+        .pricing-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #D4AF37, #FFD700);
+            border-radius: 24px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: -1;
+        }
+        
+        .pricing-card:hover::before {
+            opacity: 0.3;
         }
         
         .pricing-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(212, 175, 55, 0.4);
+            background: #2a2a2a;
         }
         
         .pricing-card.popular {
-            border: 3px solid #D4AF37;
+            border: 2px solid #D4AF37;
+            box-shadow: 0 12px 50px rgba(212, 175, 55, 0.5);
         }
         
         .popular-badge {
             position: absolute;
-            top: 20px;
-            right: -35px;
-            background: #D4AF37;
-            color: #333;
-            padding: 5px 40px;
+            top: 25px;
+            right: -40px;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            color: #000;
+            padding: 8px 50px;
             transform: rotate(45deg);
-            font-weight: 700;
+            font-weight: 800;
             font-size: 0.85rem;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.6);
         }
         
         .plan-name {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: #333;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 25px;
+            color: #E8E8E8;
+            letter-spacing: -0.5px;
         }
         
         .plan-price {
-            font-size: 3rem;
-            font-weight: 700;
-            color: #0066CC;
-            margin-bottom: 10px;
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
         }
         
         .plan-price small {
-            font-size: 1.2rem;
-            color: #666;
+            font-size: 1.3rem;
+            color: #A0A0A0;
+            font-weight: 600;
         }
         
         .discount-info {
-            background: #FFF3CD;
-            color: #856404;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            font-size: 0.95rem;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(255, 215, 0, 0.15) 100%);
+            color: #FFD700;
+            padding: 14px 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            text-align: center;
         }
         
         .plan-features {
             list-style: none;
             padding: 0;
-            margin: 30px 0;
+            margin: 35px 0;
         }
         
         .plan-features li {
-            padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
-            color: #666;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+            color: #E8E8E8;
+            font-size: 1rem;
         }
         
         .plan-features li:before {
             content: '✓';
-            color: #28A745;
-            font-weight: 700;
-            margin-right: 10px;
+            color: #D4AF37;
+            font-weight: 900;
+            margin-right: 12px;
+            font-size: 1.2rem;
         }
         
         .btn-subscribe {
             width: 100%;
-            padding: 15px;
-            background: #0066CC;
-            color: white;
+            padding: 18px;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            color: #000;
             border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
+            border-radius: 12px;
+            font-size: 1.15rem;
+            font-weight: 800;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.5px;
+            box-shadow: 0 6px 25px rgba(212, 175, 55, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-subscribe::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn-subscribe:hover::before {
+            width: 400px;
+            height: 400px;
         }
         
         .btn-subscribe:hover {
-            background: #0052A3;
-            transform: translateY(-2px);
-        }
-        
-        .btn-subscribe.popular {
-            background: #D4AF37;
-            color: #333;
-        }
-        
-        .btn-subscribe.popular:hover {
-            background: #F0C650;
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 12px 40px rgba(212, 175, 55, 0.6);
         }
         
         @media (max-width: 768px) {
             .pricing-header h1 {
-                font-size: 2rem;
+                font-size: 2.5rem;
             }
             
             .pricing-cards {
                 grid-template-columns: 1fr;
+            }
+            
+            .pricing-card {
+                padding: 40px 30px;
             }
         }
     </style>
@@ -164,10 +219,6 @@
                 <div class="plan-price">
                     ₦49,900
                     <small>/month</small>
-                </div>
-                
-                <div class="discount-info">
-                    🎉 First 10 hotels get 10% off!
                 </div>
                 
                 <ul class="plan-features">
@@ -193,8 +244,8 @@
                 </div>
                 
                 <div class="discount-info">
-                    💎 Save ₦0 compared to monthly!<br>
-                    Plus: First 10 hotels get additional 10% off!
+                    💎 First 10 hotels get 10% OFF!<br>
+                    Save ₦59,880 annually
                 </div>
                 
                 <ul class="plan-features">

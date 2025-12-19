@@ -146,8 +146,7 @@ The plugin sends these emails:
 
 ### Monthly Plan
 - **Price**: ₦49,900 per month
-- **Discount**: 10% off for first 10 hotels
-- **Final Price**: ₦44,910 (with discount)
+- No discount available
 
 ### Yearly Plan
 - **Price**: ₦598,800 per year

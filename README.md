@@ -8,7 +8,7 @@ A comprehensive WordPress hotel management plugin designed for hotels in Nigeria
 - **Booking Management** - Complete booking workflow with date selection and guest forms
 - **Room Management** - Add, edit, and manage room types, pricing, and availability
 - **Payment Integration** - Paystack integration for Nigerian Naira (NGN) payments
-- **Subscription Plans** - Monthly (₦49,900) and Yearly (₦598,800) plans with 10% discount for first 10 hotels
+- **Subscription Plans** - Monthly (₦49,900) and Yearly (₦598,800) plans with 10% discount for first 10 hotels on yearly plan
 - **AI Chatbot** - Bilingual chatbot (English & Nigerian Pidgin) for guest enquiries
 - **Email Notifications** - Automated notifications for bookings, payments, and subscriptions
 - **WhatsApp Integration** - Guest notifications via WhatsApp Business API
