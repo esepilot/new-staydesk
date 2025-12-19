@@ -259,11 +259,11 @@
                 $alert.hide();
                 
                 $.ajax({
-                    url: staydesk_ajax.ajax_url,
+                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
                     type: 'POST',
                     data: {
                         action: 'staydesk_login',
-                        nonce: staydesk_ajax.nonce,
+                        nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
                         email: $('#email').val(),
                         password: $('#password').val(),
                         remember: $('#remember').is(':checked')
@@ -278,13 +278,21 @@
                             }, 1000);
                         } else {
                             $alert.removeClass('alert-success').addClass('alert-error')
-                                  .text(response.data.message).show();
+                                  .text(response.data.message || 'An error occurred. Please try again.').show();
                             $btn.prop('disabled', false).text('Login');
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error('Login error:', status, error);
+                        var errorMessage = 'An error occurred. Please try again.';
+                        
+                        // Try to get more specific error message
+                        if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+                            errorMessage = xhr.responseJSON.data.message;
+                        }
+                        
                         $alert.removeClass('alert-success').addClass('alert-error')
-                              .text('An error occurred. Please try again.').show();
+                              .text(errorMessage).show();
                         $btn.prop('disabled', false).text('Login');
                     }
                 });

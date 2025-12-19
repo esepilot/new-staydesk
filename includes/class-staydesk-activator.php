@@ -66,7 +66,7 @@ class Staydesk_Activator {
         $table_bookings = $wpdb->prefix . 'staydesk_bookings';
         $sql_bookings = "CREATE TABLE $table_bookings (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-            booking_reference varchar(50) NOT NULL UNIQUE,
+            booking_reference varchar(50) NOT NULL,
             hotel_id bigint(20) UNSIGNED NOT NULL,
             room_id bigint(20) UNSIGNED NOT NULL,
             guest_id bigint(20) UNSIGNED NOT NULL,
@@ -80,6 +80,7 @@ class Staydesk_Activator {
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
+            UNIQUE KEY booking_reference (booking_reference),
             KEY hotel_id (hotel_id),
             KEY guest_id (guest_id),
             KEY booking_status (booking_status),
@@ -160,7 +161,7 @@ class Staydesk_Activator {
         $sql_support = "CREATE TABLE $table_support (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             hotel_id bigint(20) UNSIGNED NOT NULL,
-            ticket_reference varchar(50) NOT NULL UNIQUE,
+            ticket_reference varchar(50) NOT NULL,
             subject varchar(255) NOT NULL,
             message text NOT NULL,
             priority varchar(50) DEFAULT 'normal',
@@ -168,6 +169,7 @@ class Staydesk_Activator {
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
+            UNIQUE KEY ticket_reference (ticket_reference),
             KEY hotel_id (hotel_id),
             KEY status (status)
         ) $charset_collate;";
