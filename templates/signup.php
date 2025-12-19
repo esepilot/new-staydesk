@@ -251,6 +251,26 @@
                     console.log('StayDesk Signup Form Initialized');
                     console.log('AJAX URL:', '<?php echo admin_url('admin-ajax.php'); ?>');
                     
+                    // Test AJAX connection first
+                    $.ajax({
+                        url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                        type: 'POST',
+                        data: {
+                            action: 'staydesk_test'
+                        },
+                        success: function(response) {
+                            console.log('AJAX Test Success:', response);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('AJAX Test Failed:', {
+                                status: status,
+                                error: error,
+                                statusCode: xhr.status,
+                                responseText: xhr.responseText
+                            });
+                        }
+                    });
+                    
                     $('#staydesk-signup-form').on('submit', function(e) {
                         e.preventDefault();
                         console.log('Form submitted');

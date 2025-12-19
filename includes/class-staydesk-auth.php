@@ -15,14 +15,31 @@ class Staydesk_Auth {
         add_shortcode('staydesk_login', array($this, 'render_login_form'));
         add_shortcode('staydesk_signup', array($this, 'render_signup_form'));
 
-        // AJAX handlers
+        // AJAX handlers (for both logged-in and non-logged-in users)
         add_action('wp_ajax_nopriv_staydesk_login', array($this, 'handle_login'));
+        add_action('wp_ajax_staydesk_login', array($this, 'handle_login'));
         add_action('wp_ajax_nopriv_staydesk_signup', array($this, 'handle_signup'));
+        add_action('wp_ajax_staydesk_signup', array($this, 'handle_signup'));
         add_action('wp_ajax_nopriv_staydesk_confirm_email', array($this, 'confirm_email'));
         add_action('wp_ajax_staydesk_logout', array($this, 'handle_logout'));
+        
+        // Test endpoint to verify AJAX is working
+        add_action('wp_ajax_nopriv_staydesk_test', array($this, 'test_ajax'));
+        add_action('wp_ajax_staydesk_test', array($this, 'test_ajax'));
 
         // Handle login redirects
         add_action('template_redirect', array($this, 'check_authentication'));
+        
+        // Log initialization
+        error_log('StayDesk Auth: Class initialized and AJAX handlers registered');
+    }
+    
+    /**
+     * Test AJAX endpoint.
+     */
+    public function test_ajax() {
+        error_log('StayDesk Test: AJAX test endpoint hit');
+        wp_send_json_success(array('message' => 'AJAX is working!'));
     }
 
     /**
@@ -59,15 +76,17 @@ class Staydesk_Auth {
     public function handle_signup() {
         // Log the request for debugging
         error_log('StayDesk Signup: Request received');
+        error_log('StayDesk Signup: POST data - ' . print_r($_POST, true));
         
         // Verify nonce
-        try {
-            check_ajax_referer('staydesk_nonce', 'nonce');
-        } catch (Exception $e) {
-            error_log('StayDesk Signup: Nonce verification failed - ' . $e->getMessage());
-            wp_send_json_error(array('message' => 'Security verification failed. Please refresh and try again.'));
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'staydesk_nonce')) {
+            error_log('StayDesk Signup: Nonce verification failed');
+            error_log('StayDesk Signup: Nonce value - ' . (isset($_POST['nonce']) ? $_POST['nonce'] : 'not set'));
+            wp_send_json_error(array('message' => 'Security verification failed. Please refresh the page and try again.'));
             return;
         }
+        
+        error_log('StayDesk Signup: Nonce verified successfully');
 
         global $wpdb;
 
@@ -170,15 +189,17 @@ class Staydesk_Auth {
      */
     public function handle_login() {
         error_log('StayDesk Login: Request received');
+        error_log('StayDesk Login: POST data - ' . print_r($_POST, true));
         
         // Verify nonce
-        try {
-            check_ajax_referer('staydesk_nonce', 'nonce');
-        } catch (Exception $e) {
-            error_log('StayDesk Login: Nonce verification failed - ' . $e->getMessage());
-            wp_send_json_error(array('message' => 'Security verification failed. Please refresh and try again.'));
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'staydesk_nonce')) {
+            error_log('StayDesk Login: Nonce verification failed');
+            error_log('StayDesk Login: Nonce value - ' . (isset($_POST['nonce']) ? $_POST['nonce'] : 'not set'));
+            wp_send_json_error(array('message' => 'Security verification failed. Please refresh the page and try again.'));
             return;
         }
+        
+        error_log('StayDesk Login: Nonce verified successfully');
 
         global $wpdb;
 
