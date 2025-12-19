@@ -43,6 +43,7 @@ class Staydesk {
      */
     private function load_dependencies() {
         require_once STAYDESK_PLUGIN_DIR . 'includes/class-staydesk-loader.php';
+        require_once STAYDESK_PLUGIN_DIR . 'includes/class-staydesk-settings.php';
         require_once STAYDESK_PLUGIN_DIR . 'includes/class-staydesk-auth.php';
         require_once STAYDESK_PLUGIN_DIR . 'includes/class-staydesk-dashboard.php';
         require_once STAYDESK_PLUGIN_DIR . 'includes/class-staydesk-admin.php';

@@ -192,8 +192,37 @@ class Staydesk_Activator {
         // Create custom pages
         self::create_plugin_pages();
 
+        // Add custom roles
+        self::add_custom_roles();
+
         // Flush rewrite rules
         flush_rewrite_rules();
+    }
+
+    /**
+     * Add custom user roles.
+     */
+    private static function add_custom_roles() {
+        // Add hotel role
+        add_role(
+            'staydesk_hotel',
+            'StayDesk Hotel',
+            array(
+                'read' => true,
+                'edit_posts' => false,
+                'delete_posts' => false,
+                'publish_posts' => false,
+                'upload_files' => true,
+            )
+        );
+
+        // Add hotel admin capabilities to administrator role
+        $admin = get_role('administrator');
+        if ($admin) {
+            $admin->add_cap('manage_staydesk');
+            $admin->add_cap('manage_hotels');
+            $admin->add_cap('view_hotel_reports');
+        }
     }
 
     /**
