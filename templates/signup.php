@@ -1,9 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
+<style>
         body {
             margin: 0;
             padding: 0;
@@ -189,9 +184,8 @@
             }
         }
     </style>
-</head>
-<body>
-    <div class="staydesk-signup">
+    
+<div class="staydesk-signup">
         <div class="signup-container">
             <div class="signup-header">
                 <h1>Join StayDesk</h1>
@@ -312,7 +306,7 @@
                                     
                                     setTimeout(function() {
                                         window.location.href = response.data.redirect;
-                                    }, 2000);
+                                    }, 800);
                                 } else {
                                     $alert.removeClass('alert-success').addClass('alert-error')
                                           .text(response.data.message || 'An error occurred. Please try again.').show();
@@ -354,5 +348,3 @@
             }
         })();
     </script>
-</body>
-</html>

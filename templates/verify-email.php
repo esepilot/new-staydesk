@@ -1,9 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
+<style>
         body {
             margin: 0;
             padding: 0;
@@ -272,9 +267,8 @@
             }
         }
     </style>
-</head>
-<body>
-    <div class="staydesk-verify">
+    
+<div class="staydesk-verify">
         <div class="verify-container">
             <div class="verify-header">
                 <h1>✉️ Verify Your Email</h1>
@@ -388,7 +382,7 @@
                                 showMessage(response.data.message, 'success');
                                 setTimeout(function() {
                                     window.location.href = response.data.redirect;
-                                }, 1500);
+                                }, 800);
                             } else {
                                 showMessage(response.data.message, 'error');
                                 $btn.prop('disabled', false).text('Verify Email');
@@ -460,5 +454,3 @@
             }
         })();
     </script>
-</body>
-</html>

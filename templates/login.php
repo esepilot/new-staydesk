@@ -1,9 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
+<style>
         body {
             margin: 0;
             padding: 0;
@@ -205,9 +200,8 @@
             }
         }
     </style>
-</head>
-<body>
-    <div class="staydesk-login">
+    
+<div class="staydesk-login">
         <div class="login-container">
             <div class="login-header">
                 <h1>Welcome Back!</h1>
@@ -294,7 +288,7 @@
                                     
                                     setTimeout(function() {
                                         window.location.href = response.data.redirect;
-                                    }, 1500);
+                                    }, 600);
                                 } else {
                                     $alert.removeClass('alert-success').addClass('alert-error')
                                           .text(response.data.message || 'An error occurred. Please try again.').show();
@@ -332,5 +326,3 @@
             }
         })();
     </script>
-</body>
-</html>
