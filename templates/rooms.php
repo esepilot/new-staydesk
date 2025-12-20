@@ -361,6 +361,18 @@ $room_types = $wpdb->get_results($wpdb->prepare(
         .edit-form-grid textarea {
             grid-column: span 3;
         }
+        
+        .room-type-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 15px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(255, 215, 0, 0.1));
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            color: #D4AF37;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
     </style>
     
     <div class="rooms-container">
@@ -374,6 +386,28 @@ $room_types = $wpdb->get_results($wpdb->prepare(
         
         <div id="alertBox" class="alert"></div>
         
+        <!-- Room Types Management Section -->
+        <div class="form-section" style="margin-bottom: 30px;">
+            <h2>Manage Room Types</h2>
+            <div style="display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px;">
+                <div class="form-group" style="flex: 1; margin: 0;">
+                    <label>Add New Room Type</label>
+                    <input type="text" id="newRoomType" placeholder="e.g., Executive Suite, Penthouse">
+                </div>
+                <button type="button" class="btn btn-primary" onclick="addRoomType()">+ Add Type</button>
+            </div>
+            <div id="roomTypesList" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <?php foreach ($room_types as $type): ?>
+                    <span class="room-type-tag" data-id="<?php echo $type->id; ?>">
+                        <?php echo esc_html($type->type_name); ?>
+                        <?php if ($type->hotel_id): ?>
+                            <button onclick="deleteRoomType(<?php echo $type->id; ?>)" style="background: none; border: none; color: #ff4444; cursor: pointer; margin-left: 8px;">×</button>
+                        <?php endif; ?>
+                    </span>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        
         <div id="roomForm" class="form-section">
             <h2>Add New Room</h2>
             <form id="addRoomForm">
@@ -384,13 +418,11 @@ $room_types = $wpdb->get_results($wpdb->prepare(
                     </div>
                     <div class="form-group">
                         <label>Room Type *</label>
-                        <select name="room_type" required>
+                        <select name="room_type" id="roomTypeSelect" required>
                             <option value="">Select Type</option>
-                            <option value="Single">Single</option>
-                            <option value="Double">Double</option>
-                            <option value="Suite">Suite</option>
-                            <option value="Deluxe">Deluxe</option>
-                            <option value="Presidential">Presidential</option>
+                            <?php foreach ($room_types as $type): ?>
+                                <option value="<?php echo esc_attr($type->type_name); ?>"><?php echo esc_html($type->type_name); ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="form-group">
@@ -573,6 +605,80 @@ $room_types = $wpdb->get_results($wpdb->prepare(
                         setTimeout(() => location.reload(), 1500);
                     } else {
                         showAlert('Error deleting room', 'error');
+                    }
+                }
+            });
+        }
+        
+        function addRoomType() {
+            const typeName = document.getElementById('newRoomType').value.trim();
+            if (!typeName) {
+                showAlert('Please enter a room type name', 'error');
+                return;
+            }
+            
+            jQuery.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'staydesk_add_room_type',
+                    nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                    hotel_id: <?php echo $hotel->id; ?>,
+                    type_name: typeName
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('Room type added successfully!', 'success');
+                        document.getElementById('newRoomType').value = '';
+                        
+                        // Add to list without reload
+                        const tag = document.createElement('span');
+                        tag.className = 'room-type-tag';
+                        tag.setAttribute('data-id', response.data.type_id);
+                        tag.innerHTML = typeName + '<button onclick="deleteRoomType(' + response.data.type_id + ')" style="background: none; border: none; color: #ff4444; cursor: pointer; margin-left: 8px;">×</button>';
+                        document.getElementById('roomTypesList').appendChild(tag);
+                        
+                        // Add to dropdown
+                        const option = document.createElement('option');
+                        option.value = typeName;
+                        option.textContent = typeName;
+                        document.getElementById('roomTypeSelect').appendChild(option);
+                    } else {
+                        showAlert(response.data.message || 'Error adding room type', 'error');
+                    }
+                }
+            });
+        }
+        
+        function deleteRoomType(typeId) {
+            if (!confirm('Are you sure you want to delete this room type?')) return;
+            
+            jQuery.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'staydesk_delete_room_type',
+                    nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                    type_id: typeId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('Room type deleted successfully!', 'success');
+                        
+                        // Remove from list without reload
+                        const tag = document.querySelector('.room-type-tag[data-id="' + typeId + '"]');
+                        if (tag) tag.remove();
+                        
+                        // Remove from dropdown
+                        const options = document.getElementById('roomTypeSelect').options;
+                        for (let i = 0; i < options.length; i++) {
+                            if (options[i].value === response.data.type_name) {
+                                options[i].remove();
+                                break;
+                            }
+                        }
+                    } else {
+                        showAlert('Error deleting room type', 'error');
                     }
                 }
             });

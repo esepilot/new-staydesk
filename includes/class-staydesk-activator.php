@@ -30,6 +30,7 @@ class Staydesk_Activator {
             hotel_logo varchar(255) DEFAULT NULL,
             onboarding_data longtext DEFAULT NULL,
             account_details longtext DEFAULT NULL,
+            hotel_info_json longtext DEFAULT NULL,
             subscription_status varchar(50) DEFAULT 'inactive',
             subscription_plan varchar(50) DEFAULT NULL,
             subscription_expiry datetime DEFAULT NULL,
@@ -173,6 +174,17 @@ class Staydesk_Activator {
             KEY hotel_id (hotel_id),
             KEY status (status)
         ) $charset_collate;";
+        
+        // Room types table
+        $table_room_types = $wpdb->prefix . 'staydesk_room_types';
+        $sql_room_types = "CREATE TABLE $table_room_types (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            hotel_id bigint(20) UNSIGNED DEFAULT NULL,
+            type_name varchar(100) NOT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY hotel_id (hotel_id)
+        ) $charset_collate;";
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         
@@ -184,6 +196,17 @@ class Staydesk_Activator {
         dbDelta($sql_chat_logs);
         dbDelta($sql_subscriptions);
         dbDelta($sql_support);
+        dbDelta($sql_room_types);
+        
+        // Insert default room types (hotel_id = NULL means available to all)
+        $default_types = array('Single', 'Double', 'Suite', 'Deluxe', 'Presidential');
+        foreach ($default_types as $type) {
+            $wpdb->insert(
+                $table_room_types,
+                array('type_name' => $type, 'hotel_id' => NULL),
+                array('%s', '%d')
+            );
+        }
 
         // Set plugin version
         add_option('staydesk_version', STAYDESK_VERSION);
@@ -271,6 +294,10 @@ class Staydesk_Activator {
             'staydesk-forgot-password' => array(
                 'title' => 'Forgot Password - StayDesk',
                 'content' => '[staydesk_forgot_password]'
+            ),
+            'staydesk-hotel-info' => array(
+                'title' => 'Hotel Information - StayDesk',
+                'content' => '[staydesk_hotel_info]'
             ),
             'staydesk-admin' => array(
                 'title' => 'Admin Dashboard - StayDesk',
