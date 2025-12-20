@@ -364,8 +364,19 @@ $dashboard_data = Staydesk_Dashboard::get_dashboard_data($hotel->id);
                 <p>Manage your subscription plan and billing.</p>
                 <a href="<?php echo home_url('/staydesk-pricing'); ?>" class="btn-section">View Subscription</a>
             </div>
+            
+            <div class="section-card">
+                <h2>ℹ️ Hotel Information</h2>
+                <p>Manage hotel FAQs and information for the AI chatbot.</p>
+                <a href="<?php echo home_url('/staydesk-hotel-info'); ?>" class="btn-section">Manage Hotel Info</a>
+            </div>
         </div>
     </div>
+    
+    <?php 
+    // Render embedded chatbot widget on dashboard
+    Staydesk_Chatbot::render_dashboard_widget($hotel->id);
+    ?>
     
     <script>
         // Real-time clock

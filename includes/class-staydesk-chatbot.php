@@ -261,6 +261,227 @@ class Staydesk_Chatbot {
             $session_id
         ));
     }
+
+    /**
+     * Render dashboard chatbot widget.
+     */
+    public static function render_dashboard_widget($hotel_id) {
+        ?>
+        <div id="dashboard-chatbot-widget" style="position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
+            <style>
+                #dashboard-chatbot-widget .chat-toggle {
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+                    border: none;
+                    cursor: pointer;
+                    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 28px;
+                    transition: all 0.3s ease;
+                }
+                
+                #dashboard-chatbot-widget .chat-toggle:hover {
+                    transform: scale(1.1);
+                    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
+                }
+                
+                #dashboard-chatbot-widget .chat-window {
+                    display: none;
+                    position: absolute;
+                    bottom: 75px;
+                    left: 0;
+                    width: 350px;
+                    height: 500px;
+                    background: #1a1a1a;
+                    border-radius: 15px;
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+                    border: 1px solid rgba(212, 175, 55, 0.3);
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                #dashboard-chatbot-widget .chat-window.open {
+                    display: flex;
+                }
+                
+                #dashboard-chatbot-widget .chat-header {
+                    background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+                    padding: 15px;
+                    border-radius: 15px 15px 0 0;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                
+                #dashboard-chatbot-widget .chat-header h3 {
+                    margin: 0;
+                    color: #0a0a0a;
+                    font-size: 16px;
+                    font-weight: 700;
+                }
+                
+                #dashboard-chatbot-widget .chat-close {
+                    background: none;
+                    border: none;
+                    color: #0a0a0a;
+                    font-size: 20px;
+                    cursor: pointer;
+                    padding: 0;
+                    width: 25px;
+                    height: 25px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                #dashboard-chatbot-widget .chat-messages {
+                    flex: 1;
+                    overflow-y: auto;
+                    padding: 15px;
+                    background: #0a0a0a;
+                }
+                
+                #dashboard-chatbot-widget .chat-message {
+                    margin-bottom: 12px;
+                    padding: 10px 12px;
+                    border-radius: 10px;
+                    max-width: 80%;
+                    word-wrap: break-word;
+                }
+                
+                #dashboard-chatbot-widget .chat-message.user {
+                    background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
+                    color: #E8E8E8;
+                    margin-left: auto;
+                    text-align: right;
+                }
+                
+                #dashboard-chatbot-widget .chat-message.bot {
+                    background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+                    color: #0a0a0a;
+                    margin-right: auto;
+                }
+                
+                #dashboard-chatbot-widget .chat-input-area {
+                    padding: 15px;
+                    background: #1a1a1a;
+                    border-top: 1px solid rgba(212, 175, 55, 0.2);
+                    border-radius: 0 0 15px 15px;
+                    display: flex;
+                    gap: 10px;
+                }
+                
+                #dashboard-chatbot-widget .chat-input {
+                    flex: 1;
+                    background: rgba(42, 42, 42, 0.8);
+                    border: 1px solid rgba(212, 175, 55, 0.3);
+                    border-radius: 20px;
+                    padding: 10px 15px;
+                    color: #FFFFFF;
+                    font-size: 14px;
+                    outline: none;
+                }
+                
+                #dashboard-chatbot-widget .chat-input:focus {
+                    border-color: #D4AF37;
+                    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+                }
+                
+                #dashboard-chatbot-widget .chat-send {
+                    background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+                    border: none;
+                    border-radius: 50%;
+                    width: 40px;
+                    height: 40px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.3s ease;
+                }
+                
+                #dashboard-chatbot-widget .chat-send:hover {
+                    transform: scale(1.1);
+                }
+            </style>
+            
+            <button class="chat-toggle" onclick="toggleDashboardChat()">🤖</button>
+            
+            <div class="chat-window" id="dashboardChatWindow">
+                <div class="chat-header">
+                    <h3>🤖 Hotel Assistant</h3>
+                    <button class="chat-close" onclick="toggleDashboardChat()">×</button>
+                </div>
+                
+                <div class="chat-messages" id="dashboardChatMessages">
+                    <div class="chat-message bot">
+                        Hello! I'm your hotel assistant. Ask me anything about check-in times, amenities, policies, or room availability!
+                    </div>
+                </div>
+                
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="dashboardChatInput" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendDashboardChat()">
+                    <button class="chat-send" onclick="sendDashboardChat()">➤</button>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+        function toggleDashboardChat() {
+            var chatWindow = document.getElementById('dashboardChatWindow');
+            chatWindow.classList.toggle('open');
+        }
+        
+        function sendDashboardChat() {
+            var input = document.getElementById('dashboardChatInput');
+            var message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message to chat
+            var messagesDiv = document.getElementById('dashboardChatMessages');
+            var userMsg = document.createElement('div');
+            userMsg.className = 'chat-message user';
+            userMsg.textContent = message;
+            messagesDiv.appendChild(userMsg);
+            
+            input.value = '';
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            // Send to server
+            jQuery.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'staydesk_chatbot_message',
+                    hotel_id: <?php echo intval($hotel_id); ?>,
+                    message: message,
+                    session_id: 'dashboard_<?php echo get_current_user_id(); ?>_' + Date.now(),
+                    language: 'en'
+                },
+                success: function(response) {
+                    var botMsg = document.createElement('div');
+                    botMsg.className = 'chat-message bot';
+                    botMsg.textContent = response.data.message || 'Sorry, I encountered an error.';
+                    messagesDiv.appendChild(botMsg);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                },
+                error: function() {
+                    var botMsg = document.createElement('div');
+                    botMsg.className = 'chat-message bot';
+                    botMsg.textContent = 'Sorry, I\'m having trouble connecting. Please try again.';
+                    messagesDiv.appendChild(botMsg);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+            });
+        }
+        </script>
+        <?php
+    }
 }
 
 new Staydesk_Chatbot();
