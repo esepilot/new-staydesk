@@ -24,13 +24,14 @@ $rooms = $wpdb->get_results($wpdb->prepare(
     "SELECT * FROM $table_rooms WHERE hotel_id = %d ORDER BY created_at DESC",
     $hotel->id
 ));
+
+$table_room_types = $wpdb->prefix . 'staydesk_room_types';
+$room_types = $wpdb->get_results($wpdb->prepare(
+    "SELECT * FROM $table_room_types WHERE hotel_id = %d OR hotel_id IS NULL ORDER BY type_name ASC",
+    $hotel->id
+));
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
+<style>
         * {
             margin: 0;
             padding: 0;
@@ -271,9 +272,97 @@ $rooms = $wpdb->get_results($wpdb->prepare(
             margin-bottom: 15px;
             color: #E8E8E8;
         }
+        
+        .room-types-section {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        
+        .room-types-section h3 {
+            color: #D4AF37;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .room-types-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .room-type-badge {
+            background: #2a2a2a;
+            color: #E8E8E8;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        
+        .room-type-badge .delete-type {
+            color: #DC3545;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .room-type-badge .delete-type:hover {
+            color: #FF4444;
+        }
+        
+        .add-type-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .add-type-form input {
+            flex: 1;
+            max-width: 300px;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 10px;
+            color: #E8E8E8;
+        }
+        
+        .edit-row {
+            background: #2a2a2a;
+        }
+        
+        .edit-row td {
+            padding: 15px !important;
+        }
+        
+        .edit-form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .edit-form-grid input,
+        .edit-form-grid select,
+        .edit-form-grid textarea {
+            padding: 10px;
+            background: #1a1a1a;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 8px;
+            color: #E8E8E8;
+            font-size: 0.9rem;
+        }
+        
+        .edit-form-grid textarea {
+            grid-column: span 3;
+        }
     </style>
-</head>
-<body>
+    
     <div class="rooms-container">
         <div class="page-header">
             <h1>Room Management</h1>
