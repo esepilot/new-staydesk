@@ -5,7 +5,7 @@
             background: #0a0a0a;
         }
         
-        .staydesk-signup {
+        .staydesk-forgot {
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -17,7 +17,7 @@
             overflow: hidden;
         }
         
-        .staydesk-signup::before {
+        .staydesk-forgot::before {
             content: '';
             position: absolute;
             top: -50%;
@@ -33,7 +33,7 @@
             50% { transform: scale(1.1); opacity: 0.5; }
         }
         
-        .signup-container {
+        .forgot-container {
             background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
             padding: 55px;
             border-radius: 24px;
@@ -46,12 +46,12 @@
             z-index: 1;
         }
         
-        .signup-header {
+        .forgot-header {
             text-align: center;
             margin-bottom: 45px;
         }
         
-        .signup-header h1 {
+        .forgot-header h1 {
             background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -62,7 +62,7 @@
             letter-spacing: -0.5px;
         }
         
-        .signup-header p {
+        .forgot-header p {
             color: #A0A0A0;
             font-size: 1.05rem;
         }
@@ -123,7 +123,7 @@
             background: rgba(42, 42, 42, 0.9);
         }
         
-        .btn-signup {
+        .btn-submit {
             width: 100%;
             padding: 17px;
             background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
@@ -138,12 +138,12 @@
             box-shadow: 0 6px 25px rgba(212, 175, 55, 0.4);
         }
         
-        .btn-signup:hover {
+        .btn-submit:hover {
             transform: translateY(-3px) scale(1.02);
             box-shadow: 0 12px 40px rgba(212, 175, 55, 0.6);
         }
         
-        .btn-signup:disabled {
+        .btn-submit:disabled {
             background: linear-gradient(135deg, #666 0%, #888 100%);
             cursor: not-allowed;
             transform: none;
@@ -199,60 +199,69 @@
             }
         }
         
+        .hidden {
+            display: none;
+        }
+        
         @media (max-width: 768px) {
-            .signup-container {
+            .forgot-container {
                 padding: 30px;
             }
         }
     </style>
     
-<div class="staydesk-signup">
-        <div class="signup-container">
-            <div class="signup-header">
-                <h1>Join StayDesk</h1>
-                <p>Create your hotel account today</p>
+<div class="staydesk-forgot">
+        <div class="forgot-container">
+            <div class="forgot-header">
+                <h1>🔐 Forgot Password</h1>
+                <p>Reset your password in 2 simple steps</p>
             </div>
             
-            <div id="signup-alert" class="alert"></div>
+            <div id="forgot-alert" class="alert"></div>
             
-            <form id="staydesk-signup-form">
-                <div class="form-group">
-                    <label for="hotel_name">Hotel Name</label>
-                    <input type="text" id="hotel_name" name="hotel_name" required>
-                </div>
-                
+            <!-- Step 1: Request Code -->
+            <form id="request-code-form">
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <input type="email" id="email" name="email" required>
                 </div>
                 
+                <button type="submit" class="btn-submit" id="request-btn">Send Reset Code</button>
+            </form>
+            
+            <!-- Step 2: Reset Password (hidden initially) -->
+            <form id="reset-password-form" class="hidden">
                 <div class="form-group">
-                    <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" name="phone" placeholder="08012345678">
+                    <label for="code">Reset Code (from email)</label>
+                    <input type="text" id="code" name="code" maxlength="6" placeholder="Enter 6-digit code" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="password">Password</label>
+                    <label for="new_password">New Password</label>
                     <div class="password-wrapper">
-                        <input type="password" id="password" name="password" required minlength="8">
-                        <span class="password-toggle" onclick="togglePassword('password', this)">👁️</span>
+                        <input type="password" id="new_password" name="new_password" required minlength="8">
+                        <span class="password-toggle" onclick="togglePassword('new_password', this)">👁️</span>
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="confirm_password">Confirm Password</label>
+                    <label for="confirm_password">Confirm New Password</label>
                     <div class="password-wrapper">
                         <input type="password" id="confirm_password" name="confirm_password" required minlength="8">
                         <span class="password-toggle" onclick="togglePassword('confirm_password', this)">👁️</span>
                     </div>
                 </div>
                 
-                <button type="submit" class="btn-signup" id="signup-btn">Create Account</button>
+                <button type="submit" class="btn-submit" id="reset-btn">Reset Password</button>
                 
-                <div class="login-link">
-                    Already have an account? <a href="<?php echo home_url('/staydesk-login'); ?>">Login here</a>
+                <div class="login-link" style="margin-top: 15px;">
+                    <a href="#" id="resend-code-link">Resend code</a>
                 </div>
             </form>
+            
+            <div class="login-link">
+                Remember your password? <a href="<?php echo home_url('/staydesk-login'); ?>">Login here</a>
+            </div>
         </div>
     </div>
     
@@ -273,112 +282,125 @@
             var checkJQuery = setInterval(function() {
                 if (typeof jQuery !== 'undefined') {
                     clearInterval(checkJQuery);
-                    initSignupForm();
+                    initForgotPasswordForm();
                 }
             }, 100);
             
-            function initSignupForm() {
+            function initForgotPasswordForm() {
                 jQuery(document).ready(function($) {
-                    console.log('StayDesk Signup Form Initialized');
-                    console.log('AJAX URL:', '<?php echo admin_url('admin-ajax.php'); ?>');
+                    console.log('StayDesk Forgot Password Form Initialized');
                     
-                    // Test AJAX connection first
-                    $.ajax({
-                        url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                        type: 'POST',
-                        data: {
-                            action: 'staydesk_test'
-                        },
-                        success: function(response) {
-                            console.log('AJAX Test Success:', response);
-                        },
-                        error: function(xhr, status, error) {
-                            console.error('AJAX Test Failed:', {
-                                status: status,
-                                error: error,
-                                statusCode: xhr.status,
-                                responseText: xhr.responseText
-                            });
-                        }
+                    var userEmail = '';
+                    
+                    // Request code form
+                    $('#request-code-form').on('submit', function(e) {
+                        e.preventDefault();
+                        
+                        var $btn = $('#request-btn');
+                        var $alert = $('#forgot-alert');
+                        userEmail = $('#email').val();
+                        
+                        $btn.prop('disabled', true).text('Sending...');
+                        $alert.hide();
+                        
+                        $.ajax({
+                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                            type: 'POST',
+                            data: {
+                                action: 'staydesk_forgot_password',
+                                nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                                email: userEmail
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    $alert.removeClass('alert-error').addClass('alert-success')
+                                          .text(response.data.message).show();
+                                    
+                                    // Show reset form, hide request form
+                                    $('#request-code-form').hide();
+                                    $('#reset-password-form').removeClass('hidden');
+                                } else {
+                                    $alert.removeClass('alert-success').addClass('alert-error')
+                                          .text(response.data.message).show();
+                                    $btn.prop('disabled', false).text('Send Reset Code');
+                                }
+                            },
+                            error: function() {
+                                $alert.removeClass('alert-success').addClass('alert-error')
+                                      .text('An error occurred. Please try again.').show();
+                                $btn.prop('disabled', false).text('Send Reset Code');
+                            }
+                        });
                     });
                     
-                    $('#staydesk-signup-form').on('submit', function(e) {
+                    // Reset password form
+                    $('#reset-password-form').on('submit', function(e) {
                         e.preventDefault();
-                        console.log('Form submitted');
                         
-                        var $btn = $('#signup-btn');
-                        var $alert = $('#signup-alert');
-                        var password = $('#password').val();
+                        var $btn = $('#reset-btn');
+                        var $alert = $('#forgot-alert');
+                        var newPassword = $('#new_password').val();
                         var confirmPassword = $('#confirm_password').val();
                         
-                        // Validate passwords match
-                        if (password !== confirmPassword) {
+                        if (newPassword !== confirmPassword) {
                             $alert.removeClass('alert-success').addClass('alert-error')
                                   .text('Passwords do not match.').show();
                             return;
                         }
                         
-                        $btn.prop('disabled', true).text('Creating account...');
+                        $btn.prop('disabled', true).text('Resetting...');
                         $alert.hide();
-                        
-                        var ajaxData = {
-                            action: 'staydesk_signup',
-                            nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
-                            hotel_name: $('#hotel_name').val(),
-                            email: $('#email').val(),
-                            phone: $('#phone').val(),
-                            password: password
-                        };
-                        
-                        console.log('Sending AJAX request with data:', ajaxData);
                         
                         $.ajax({
                             url: '<?php echo admin_url('admin-ajax.php'); ?>',
                             type: 'POST',
-                            data: ajaxData,
+                            data: {
+                                action: 'staydesk_reset_password',
+                                nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                                email: userEmail,
+                                code: $('#code').val(),
+                                new_password: newPassword
+                            },
                             success: function(response) {
-                                console.log('AJAX Success:', response);
                                 if (response.success) {
                                     $alert.removeClass('alert-error').addClass('alert-success')
                                           .text(response.data.message).show();
                                     
                                     setTimeout(function() {
                                         window.location.href = response.data.redirect;
-                                    }, 800);
+                                    }, 1500);
                                 } else {
                                     $alert.removeClass('alert-success').addClass('alert-error')
-                                          .text(response.data.message || 'An error occurred. Please try again.').show();
-                                    $btn.prop('disabled', false).text('Create Account');
+                                          .text(response.data.message).show();
+                                    $btn.prop('disabled', false).text('Reset Password');
                                 }
                             },
-                            error: function(xhr, status, error) {
-                                console.error('AJAX Error:', {
-                                    status: status,
-                                    error: error,
-                                    responseText: xhr.responseText,
-                                    response: xhr.responseJSON
-                                });
-                                
-                                var errorMessage = 'An error occurred. Please try again.';
-                                
-                                // Try to parse error response
-                                try {
-                                    if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
-                                        errorMessage = xhr.responseJSON.data.message;
-                                    } else if (xhr.responseText) {
-                                        // Try to extract error from HTML response
-                                        var match = xhr.responseText.match(/<body[^>]*>(.*?)<\/body>/is);
-                                        if (match) {
-                                            errorMessage = 'Server error. Please check console for details.';
-                                        }
-                                    }
-                                } catch (e) {
-                                    console.error('Error parsing response:', e);
-                                }
-                                
+                            error: function() {
                                 $alert.removeClass('alert-success').addClass('alert-error')
-                                      .text(errorMessage).show();
-                                $btn.prop('disabled', false).text('Create Account');
+                                      .text('An error occurred. Please try again.').show();
+                                $btn.prop('disabled', false).text('Reset Password');
+                            }
+                        });
+                    });
+                    
+                    // Resend code
+                    $('#resend-code-link').on('click', function(e) {
+                        e.preventDefault();
+                        var $alert = $('#forgot-alert');
+                        
+                        $.ajax({
+                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                            type: 'POST',
+                            data: {
+                                action: 'staydesk_forgot_password',
+                                nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                                email: userEmail
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    $alert.removeClass('alert-error').addClass('alert-success')
+                                          .text('A new reset code has been sent to your email.').show();
+                                }
                             }
                         });
                     });

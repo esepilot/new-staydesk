@@ -268,6 +268,10 @@ class Staydesk_Activator {
                 'title' => 'Pricing & Subscription - StayDesk',
                 'content' => '[staydesk_pricing]'
             ),
+            'staydesk-forgot-password' => array(
+                'title' => 'Forgot Password - StayDesk',
+                'content' => '[staydesk_forgot_password]'
+            ),
             'staydesk-admin' => array(
                 'title' => 'Admin Dashboard - StayDesk',
                 'content' => '[staydesk_admin_dashboard]'

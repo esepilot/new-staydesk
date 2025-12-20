@@ -15,6 +15,7 @@ class Staydesk_Auth {
         add_shortcode('staydesk_login', array($this, 'render_login_form'));
         add_shortcode('staydesk_signup', array($this, 'render_signup_form'));
         add_shortcode('staydesk_verify_email', array($this, 'render_verify_form'));
+        add_shortcode('staydesk_forgot_password', array($this, 'render_forgot_password_form'));
 
         // AJAX handlers (for both logged-in and non-logged-in users)
         add_action('wp_ajax_nopriv_staydesk_login', array($this, 'handle_login'));
@@ -25,6 +26,10 @@ class Staydesk_Auth {
         add_action('wp_ajax_staydesk_verify_email', array($this, 'verify_email_code'));
         add_action('wp_ajax_nopriv_staydesk_resend_code', array($this, 'resend_verification_code'));
         add_action('wp_ajax_staydesk_resend_code', array($this, 'resend_verification_code'));
+        add_action('wp_ajax_nopriv_staydesk_forgot_password', array($this, 'handle_forgot_password'));
+        add_action('wp_ajax_staydesk_forgot_password', array($this, 'handle_forgot_password'));
+        add_action('wp_ajax_nopriv_staydesk_reset_password', array($this, 'handle_reset_password'));
+        add_action('wp_ajax_staydesk_reset_password', array($this, 'handle_reset_password'));
         add_action('wp_ajax_staydesk_logout', array($this, 'handle_logout'));
         
         // Test endpoint to verify AJAX is working
@@ -293,7 +298,7 @@ class Staydesk_Auth {
             $user->ID
         ));
 
-        if ($hotel && !$hotel->email_confirmed) {
+        if ($hotel && $hotel->email_confirmed == 0) {
             error_log('StayDesk Login: Email not confirmed');
             wp_send_json_error(array('message' => 'Please confirm your email before logging in.'));
             return;
@@ -399,6 +404,10 @@ class Staydesk_Auth {
         delete_user_meta($user->ID, 'staydesk_verification_code_expiry');
 
         error_log('StayDesk Verify: Success');
+
+        // Send approval email
+        $hotel_name = $user->display_name;
+        $this->send_approval_email($email, $hotel_name);
 
         wp_send_json_success(array(
             'message' => 'Email verified successfully! You can now log in.',
@@ -575,6 +584,387 @@ class Staydesk_Auth {
         );
 
         wp_mail($email, $subject, $message, $headers);
+    }
+
+    /**
+     * Send approval email after email verification.
+     */
+    private function send_approval_email($email, $hotel_name) {
+        $subject = 'Welcome to StayDesk - Account Approved! 🎉';
+        
+        $login_url = home_url('/staydesk-login');
+        
+        $message = "
+        <html>
+        <head>
+            <style>
+                body { 
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                    background-color: #0a0a0a;
+                    margin: 0;
+                    padding: 0;
+                }
+                .container { 
+                    max-width: 600px; 
+                    margin: 40px auto; 
+                    background: #1a1a1a;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    border: 1px solid rgba(212, 175, 55, 0.3);
+                }
+                .header { 
+                    background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+                    color: #0a0a0a; 
+                    padding: 30px; 
+                    text-align: center; 
+                }
+                .header h1 {
+                    margin: 0;
+                    font-size: 28px;
+                    font-weight: 700;
+                }
+                .content { 
+                    padding: 40px; 
+                    color: #E8E8E8;
+                }
+                .content p {
+                    line-height: 1.8;
+                    margin: 15px 0;
+                }
+                .approved-box {
+                    background: rgba(40, 167, 69, 0.15);
+                    border: 2px solid #28A745;
+                    border-radius: 12px;
+                    padding: 25px;
+                    text-align: center;
+                    margin: 30px 0;
+                }
+                .approved-box h2 {
+                    color: #4ADE80;
+                    margin: 0 0 10px 0;
+                    font-size: 24px;
+                }
+                .login-button {
+                    display: inline-block;
+                    background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+                    color: #0a0a0a;
+                    padding: 15px 40px;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    margin: 20px 0;
+                }
+                .features {
+                    background: #2a2a2a;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin: 20px 0;
+                }
+                .features li {
+                    margin: 10px 0;
+                    color: #E8E8E8;
+                }
+                .footer {
+                    padding: 20px 40px;
+                    background: #0a0a0a;
+                    color: #A0A0A0;
+                    font-size: 12px;
+                    text-align: center;
+                }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>🎉 Congratulations!</h1>
+                </div>
+                <div class='content'>
+                    <p>Hello <strong>{$hotel_name}</strong>,</p>
+                    
+                    <div class='approved-box'>
+                        <h2>✅ Account Approved!</h2>
+                        <p style='color: #E8E8E8; margin: 0;'>Your StayDesk account is now active and ready to use.</p>
+                    </div>
+                    
+                    <p>You can now log in to your dashboard and start managing your hotel bookings, rooms, and guest interactions.</p>
+                    
+                    <div style='text-align: center;'>
+                        <a href='{$login_url}' class='login-button'>Login to Dashboard</a>
+                    </div>
+                    
+                    <div class='features'>
+                        <strong>What you can do with StayDesk:</strong>
+                        <ul>
+                            <li>✨ Manage hotel rooms and availability</li>
+                            <li>📅 Track bookings and reservations</li>
+                            <li>💰 Process payments with Paystack</li>
+                            <li>🤖 Use AI chatbot for guest support</li>
+                            <li>📊 View analytics and reports</li>
+                        </ul>
+                    </div>
+                    
+                    <p>If you need any assistance, our support team is here to help!</p>
+                    
+                    <p style='margin-top: 30px;'>Best regards,<br><strong>The BendlessTech Team</strong></p>
+                </div>
+                <div class='footer'>
+                    <p>© 2024 BendlessTech. All rights reserved.</p>
+                    <p>Contact us: reach@bendlesstech.com | WhatsApp: 07120018023</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+
+        $headers = array(
+            'Content-Type: text/html; charset=UTF-8',
+            'From: StayDesk <reach@bendlesstech.com>'
+        );
+
+        wp_mail($email, $subject, $message, $headers);
+    }
+
+    /**
+     * Send password reset email.
+     */
+    private function send_password_reset_email($email, $hotel_name, $code) {
+        $subject = 'Reset Your Password - StayDesk';
+        
+        $message = "
+        <html>
+        <head>
+            <style>
+                body { 
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                    background-color: #0a0a0a;
+                    margin: 0;
+                    padding: 0;
+                }
+                .container { 
+                    max-width: 600px; 
+                    margin: 40px auto; 
+                    background: #1a1a1a;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    border: 1px solid rgba(212, 175, 55, 0.3);
+                }
+                .header { 
+                    background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+                    color: #0a0a0a; 
+                    padding: 30px; 
+                    text-align: center; 
+                }
+                .header h1 {
+                    margin: 0;
+                    font-size: 28px;
+                    font-weight: 700;
+                }
+                .content { 
+                    padding: 40px; 
+                    color: #E8E8E8;
+                }
+                .content p {
+                    line-height: 1.6;
+                    margin: 15px 0;
+                }
+                .code-box {
+                    background: #2a2a2a;
+                    border: 2px solid #D4AF37;
+                    border-radius: 12px;
+                    padding: 30px;
+                    text-align: center;
+                    margin: 30px 0;
+                }
+                .code {
+                    font-size: 42px;
+                    font-weight: 700;
+                    letter-spacing: 8px;
+                    color: #FFD700;
+                    font-family: 'Courier New', monospace;
+                }
+                .note {
+                    background: rgba(212, 175, 55, 0.1);
+                    border-left: 4px solid #D4AF37;
+                    padding: 15px;
+                    margin: 20px 0;
+                    border-radius: 4px;
+                }
+                .warning {
+                    background: rgba(220, 53, 69, 0.15);
+                    border-left: 4px solid #DC3545;
+                    padding: 15px;
+                    margin: 20px 0;
+                    border-radius: 4px;
+                    color: #FF6B7A;
+                }
+                .footer {
+                    padding: 20px 40px;
+                    background: #0a0a0a;
+                    color: #A0A0A0;
+                    font-size: 12px;
+                    text-align: center;
+                }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>🔐 Password Reset</h1>
+                </div>
+                <div class='content'>
+                    <p>Hello <strong>{$hotel_name}</strong>,</p>
+                    <p>We received a request to reset your password. Use the code below to reset your password:</p>
+                    
+                    <div class='code-box'>
+                        <div style='color: #A0A0A0; font-size: 14px; margin-bottom: 10px;'>PASSWORD RESET CODE</div>
+                        <div class='code'>{$code}</div>
+                    </div>
+                    
+                    <div class='note'>
+                        <strong>⏰ Important:</strong> This code will expire in 1 hour for security reasons.
+                    </div>
+                    
+                    <div class='warning'>
+                        <strong>⚠️ Security Notice:</strong> If you didn't request a password reset, please ignore this email and your password will remain unchanged.
+                    </div>
+                    
+                    <p style='margin-top: 30px;'>Best regards,<br><strong>The BendlessTech Team</strong></p>
+                </div>
+                <div class='footer'>
+                    <p>© 2024 BendlessTech. All rights reserved.</p>
+                    <p>Contact us: reach@bendlesstech.com | WhatsApp: 07120018023</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+
+        $headers = array(
+            'Content-Type: text/html; charset=UTF-8',
+            'From: StayDesk <reach@bendlesstech.com>'
+        );
+
+        wp_mail($email, $subject, $message, $headers);
+    }
+
+    /**
+     * Render forgot password form.
+     */
+    public function render_forgot_password_form() {
+        if ($this->is_user_logged_in()) {
+            wp_redirect(home_url('/staydesk-dashboard'));
+            exit;
+        }
+
+        // Enqueue jQuery for the form
+        wp_enqueue_script('jquery');
+
+        ob_start();
+        include STAYDESK_PLUGIN_DIR . 'templates/forgot-password.php';
+        return ob_get_clean();
+    }
+
+    /**
+     * Handle forgot password request.
+     */
+    public function handle_forgot_password() {
+        error_log('StayDesk Forgot Password: Request received');
+        
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'staydesk_nonce')) {
+            wp_send_json_error(array('message' => 'Security verification failed.'));
+            return;
+        }
+
+        $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+
+        if (empty($email)) {
+            wp_send_json_error(array('message' => 'Email is required.'));
+            return;
+        }
+
+        // Get user by email
+        $user = get_user_by('email', $email);
+
+        if (!$user) {
+            wp_send_json_error(array('message' => 'No account found with this email address.'));
+            return;
+        }
+
+        // Generate 6-digit reset code
+        $reset_code = sprintf('%06d', mt_rand(0, 999999));
+        update_user_meta($user->ID, 'staydesk_reset_code', $reset_code);
+        update_user_meta($user->ID, 'staydesk_reset_code_expiry', time() + 3600); // Expires in 1 hour
+
+        // Send reset email
+        $hotel_name = $user->display_name;
+        $this->send_password_reset_email($email, $hotel_name, $reset_code);
+
+        error_log('StayDesk Forgot Password: Reset code sent to ' . $email);
+
+        wp_send_json_success(array(
+            'message' => 'A password reset code has been sent to your email.'
+        ));
+    }
+
+    /**
+     * Handle password reset.
+     */
+    public function handle_reset_password() {
+        error_log('StayDesk Reset Password: Request received');
+        
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'staydesk_nonce')) {
+            wp_send_json_error(array('message' => 'Security verification failed.'));
+            return;
+        }
+
+        $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+        $code = isset($_POST['code']) ? sanitize_text_field($_POST['code']) : '';
+        $new_password = isset($_POST['new_password']) ? $_POST['new_password'] : '';
+
+        if (empty($email) || empty($code) || empty($new_password)) {
+            wp_send_json_error(array('message' => 'All fields are required.'));
+            return;
+        }
+
+        // Get user by email
+        $user = get_user_by('email', $email);
+
+        if (!$user) {
+            wp_send_json_error(array('message' => 'Invalid email address.'));
+            return;
+        }
+
+        // Get stored code and expiry
+        $stored_code = get_user_meta($user->ID, 'staydesk_reset_code', true);
+        $code_expiry = get_user_meta($user->ID, 'staydesk_reset_code_expiry', true);
+
+        // Check if code has expired
+        if (empty($code_expiry) || time() > intval($code_expiry)) {
+            wp_send_json_error(array('message' => 'Reset code has expired. Please request a new one.'));
+            return;
+        }
+
+        // Verify code
+        if ($code !== $stored_code) {
+            wp_send_json_error(array('message' => 'Invalid reset code. Please check and try again.'));
+            return;
+        }
+
+        // Update password
+        wp_set_password($new_password, $user->ID);
+
+        // Delete reset code
+        delete_user_meta($user->ID, 'staydesk_reset_code');
+        delete_user_meta($user->ID, 'staydesk_reset_code_expiry');
+
+        error_log('StayDesk Reset Password: Password updated for user ' . $user->ID);
+
+        wp_send_json_success(array(
+            'message' => 'Password reset successfully! You can now log in.',
+            'redirect' => home_url('/staydesk-login')
+        ));
     }
 
     /**

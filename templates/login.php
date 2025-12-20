@@ -74,9 +74,30 @@
         .form-group label {
             display: block;
             margin-bottom: 10px;
-            color: #E8E8E8;
-            font-weight: 600;
+            color: #FFFFFF;
+            font-weight: 700;
             letter-spacing: 0.3px;
+        }
+        
+        .password-wrapper {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: #D4AF37;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        .password-toggle:hover {
+            color: #FFD700;
+            transform: translateY(-50%) scale(1.1);
         }
         
         .form-group input {
@@ -88,11 +109,11 @@
             transition: all 0.3s ease;
             box-sizing: border-box;
             background: rgba(26, 26, 26, 0.8);
-            color: #E8E8E8;
+            color: #FFFFFF;
         }
         
         .form-group input::placeholder {
-            color: #666;
+            color: #888;
         }
         
         .form-group input:focus {
@@ -116,6 +137,24 @@
         .remember-me label {
             color: #A0A0A0;
             margin-bottom: 0;
+        }
+        
+        .forgot-password {
+            text-align: right;
+            margin-top: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .forgot-password a {
+            color: #D4AF37;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        .forgot-password a:hover {
+            color: #FFD700;
+            text-decoration: underline;
         }
         
         .btn-login {
@@ -224,12 +263,19 @@
                 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" required>
+                        <span class="password-toggle" onclick="togglePassword('password', this)">👁️</span>
+                    </div>
                 </div>
                 
                 <div class="remember-me">
                     <input type="checkbox" id="remember" name="remember">
                     <label for="remember">Remember me</label>
+                </div>
+                
+                <div class="forgot-password">
+                    <a href="<?php echo home_url('/staydesk-forgot-password'); ?>">Forgot Password?</a>
                 </div>
                 
                 <button type="submit" class="btn-login" id="login-btn">Login</button>
@@ -242,6 +288,17 @@
     </div>
     
     <script>
+        function togglePassword(fieldId, icon) {
+            var field = document.getElementById(fieldId);
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.textContent = '🙈';
+            } else {
+                field.type = 'password';
+                icon.textContent = '👁️';
+            }
+        }
+        
         (function() {
             // Wait for jQuery to be available
             var checkJQuery = setInterval(function() {
