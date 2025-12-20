@@ -247,7 +247,6 @@
         </div>
     </div>
     
-    <?php wp_enqueue_script('jquery'); ?>
     <script>
         (function() {
             // Wait for jQuery to be available

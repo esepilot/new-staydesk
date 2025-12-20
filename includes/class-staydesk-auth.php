@@ -51,6 +51,9 @@ class Staydesk_Auth {
             exit;
         }
 
+        // Enqueue jQuery for the form
+        wp_enqueue_script('jquery');
+
         ob_start();
         include STAYDESK_PLUGIN_DIR . 'templates/login.php';
         return ob_get_clean();
@@ -64,6 +67,9 @@ class Staydesk_Auth {
             wp_redirect(home_url('/staydesk-dashboard'));
             exit;
         }
+
+        // Enqueue jQuery for the form
+        wp_enqueue_script('jquery');
 
         ob_start();
         include STAYDESK_PLUGIN_DIR . 'templates/signup.php';
