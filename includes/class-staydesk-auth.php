@@ -139,10 +139,35 @@ class Staydesk_Auth {
         }
 
         // Check if email already exists
-        if (email_exists($email)) {
-            error_log('StayDesk Signup: Validation failed - email already exists');
-            wp_send_json_error(array('message' => 'Email already registered.'));
-            return;
+        $existing_user_id = email_exists($email);
+        if ($existing_user_id) {
+            // Check if the existing account is verified
+            $table_hotels = $wpdb->prefix . 'staydesk_hotels';
+            $hotel = $wpdb->get_row($wpdb->prepare(
+                "SELECT email_confirmed FROM $table_hotels WHERE user_id = %d",
+                $existing_user_id
+            ));
+            
+            // If email is already verified, don't allow re-registration
+            if ($hotel && $hotel->email_confirmed == 1) {
+                error_log('StayDesk Signup: Validation failed - email already registered and verified');
+                wp_send_json_error(array('message' => 'This email is already registered. Please login instead.'));
+                return;
+            }
+            
+            // If email exists but not verified, delete the old unverified account
+            if ($hotel && $hotel->email_confirmed == 0) {
+                error_log('StayDesk Signup: Found unverified account - deleting old account to allow re-registration');
+                
+                // Delete hotel record
+                $wpdb->delete($table_hotels, array('user_id' => $existing_user_id), array('%d'));
+                
+                // Delete WordPress user
+                require_once(ABSPATH . 'wp-admin/includes/user.php');
+                wp_delete_user($existing_user_id);
+                
+                error_log('StayDesk Signup: Old unverified account deleted successfully');
+            }
         }
 
         // Create WordPress user
