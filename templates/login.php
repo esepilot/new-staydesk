@@ -214,9 +214,9 @@
                 <p>Login to your StayDesk account</p>
             </div>
             
-            <?php if (isset($_GET['confirmed']) && $_GET['confirmed'] == '1'): ?>
+            <?php if (isset($_GET['verified']) && $_GET['verified'] == '1'): ?>
                 <div class="alert alert-success" style="display: block;">
-                    Email confirmed successfully! You can now login.
+                    ✅ Email verified successfully! You can now login.
                 </div>
             <?php endif; ?>
             

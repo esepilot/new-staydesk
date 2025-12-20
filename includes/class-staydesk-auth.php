@@ -14,13 +14,17 @@ class Staydesk_Auth {
         // Register shortcodes
         add_shortcode('staydesk_login', array($this, 'render_login_form'));
         add_shortcode('staydesk_signup', array($this, 'render_signup_form'));
+        add_shortcode('staydesk_verify_email', array($this, 'render_verify_form'));
 
         // AJAX handlers (for both logged-in and non-logged-in users)
         add_action('wp_ajax_nopriv_staydesk_login', array($this, 'handle_login'));
         add_action('wp_ajax_staydesk_login', array($this, 'handle_login'));
         add_action('wp_ajax_nopriv_staydesk_signup', array($this, 'handle_signup'));
         add_action('wp_ajax_staydesk_signup', array($this, 'handle_signup'));
-        add_action('wp_ajax_nopriv_staydesk_confirm_email', array($this, 'confirm_email'));
+        add_action('wp_ajax_nopriv_staydesk_verify_email', array($this, 'verify_email_code'));
+        add_action('wp_ajax_staydesk_verify_email', array($this, 'verify_email_code'));
+        add_action('wp_ajax_nopriv_staydesk_resend_code', array($this, 'resend_verification_code'));
+        add_action('wp_ajax_staydesk_resend_code', array($this, 'resend_verification_code'));
         add_action('wp_ajax_staydesk_logout', array($this, 'handle_logout'));
         
         // Test endpoint to verify AJAX is working
@@ -73,6 +77,23 @@ class Staydesk_Auth {
 
         ob_start();
         include STAYDESK_PLUGIN_DIR . 'templates/signup.php';
+        return ob_get_clean();
+    }
+
+    /**
+     * Render email verification form.
+     */
+    public function render_verify_form() {
+        if ($this->is_user_logged_in()) {
+            wp_redirect(home_url('/staydesk-dashboard'));
+            exit;
+        }
+
+        // Enqueue jQuery for the form
+        wp_enqueue_script('jquery');
+
+        ob_start();
+        include STAYDESK_PLUGIN_DIR . 'templates/verify-email.php';
         return ob_get_clean();
     }
 
@@ -175,18 +196,19 @@ class Staydesk_Auth {
             error_log('StayDesk Signup: Hotel record created successfully');
         }
 
-        // Generate confirmation token
-        $token = wp_generate_password(32, false);
-        update_user_meta($user_id, 'staydesk_email_token', $token);
+        // Generate 6-digit verification code
+        $verification_code = sprintf('%06d', mt_rand(0, 999999));
+        update_user_meta($user_id, 'staydesk_verification_code', $verification_code);
+        update_user_meta($user_id, 'staydesk_verification_code_expiry', time() + 3600); // Expires in 1 hour
 
-        // Send confirmation email
-        $this->send_confirmation_email($email, $hotel_name, $token);
+        // Send confirmation email with code
+        $this->send_verification_code_email($email, $hotel_name, $verification_code);
 
-        error_log('StayDesk Signup: Success - confirmation email sent');
+        error_log('StayDesk Signup: Success - verification code sent');
 
         wp_send_json_success(array(
-            'message' => 'Registration successful! Please check your email to confirm your account.',
-            'redirect' => home_url('/staydesk-login')
+            'message' => 'Registration successful! Please check your email for the verification code.',
+            'redirect' => home_url('/staydesk-verify-email?email=' . urlencode($email))
         ));
     }
 
@@ -287,26 +309,56 @@ class Staydesk_Auth {
     }
 
     /**
-     * Confirm email address.
+     * Verify email with code.
      */
-    public function confirm_email() {
-        $token = sanitize_text_field($_GET['token']);
+    public function verify_email_code() {
+        error_log('StayDesk Verify: Request received');
         
-        if (empty($token)) {
-            wp_die('Invalid confirmation link.');
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'staydesk_nonce')) {
+            error_log('StayDesk Verify: Nonce verification failed');
+            wp_send_json_error(array('message' => 'Security verification failed. Please refresh the page and try again.'));
+            return;
         }
 
-        // Find user with this token
-        $users = get_users(array(
-            'meta_key' => 'staydesk_email_token',
-            'meta_value' => $token
-        ));
+        $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+        $code = isset($_POST['code']) ? sanitize_text_field($_POST['code']) : '';
 
-        if (empty($users)) {
-            wp_die('Invalid or expired confirmation link.');
+        error_log("StayDesk Verify: Verifying code for email: $email");
+
+        if (empty($email) || empty($code)) {
+            wp_send_json_error(array('message' => 'Email and verification code are required.'));
+            return;
         }
 
-        $user = $users[0];
+        // Get user by email
+        $user = get_user_by('email', $email);
+
+        if (!$user) {
+            error_log('StayDesk Verify: User not found');
+            wp_send_json_error(array('message' => 'Invalid email address.'));
+            return;
+        }
+
+        // Get stored code and expiry
+        $stored_code = get_user_meta($user->ID, 'staydesk_verification_code', true);
+        $code_expiry = get_user_meta($user->ID, 'staydesk_verification_code_expiry', true);
+
+        error_log("StayDesk Verify: Stored code: $stored_code, Entered code: $code");
+
+        // Check if code has expired
+        if (empty($code_expiry) || time() > intval($code_expiry)) {
+            error_log('StayDesk Verify: Code expired');
+            wp_send_json_error(array('message' => 'Verification code has expired. Please request a new one.'));
+            return;
+        }
+
+        // Verify code
+        if ($code !== $stored_code) {
+            error_log('StayDesk Verify: Code mismatch');
+            wp_send_json_error(array('message' => 'Invalid verification code. Please check and try again.'));
+            return;
+        }
 
         // Update hotel record
         global $wpdb;
@@ -317,49 +369,175 @@ class Staydesk_Auth {
             array('user_id' => $user->ID)
         );
 
-        // Delete token
-        delete_user_meta($user->ID, 'staydesk_email_token');
+        // Delete verification code
+        delete_user_meta($user->ID, 'staydesk_verification_code');
+        delete_user_meta($user->ID, 'staydesk_verification_code_expiry');
 
-        // Redirect to login
-        wp_redirect(add_query_arg('confirmed', '1', home_url('/staydesk-login')));
-        exit;
+        error_log('StayDesk Verify: Success');
+
+        wp_send_json_success(array(
+            'message' => 'Email verified successfully! You can now log in.',
+            'redirect' => home_url('/staydesk-login?verified=1')
+        ));
     }
 
     /**
-     * Send confirmation email.
+     * Resend verification code.
      */
-    private function send_confirmation_email($email, $hotel_name, $token) {
-        $confirm_url = add_query_arg(array(
-            'action' => 'staydesk_confirm_email',
-            'token' => $token
-        ), admin_url('admin-ajax.php'));
+    public function resend_verification_code() {
+        error_log('StayDesk Resend: Request received');
+        
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'staydesk_nonce')) {
+            error_log('StayDesk Resend: Nonce verification failed');
+            wp_send_json_error(array('message' => 'Security verification failed.'));
+            return;
+        }
 
-        $subject = 'Confirm Your Email - StayDesk by BendlessTech';
+        $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+
+        if (empty($email)) {
+            wp_send_json_error(array('message' => 'Email is required.'));
+            return;
+        }
+
+        // Get user by email
+        $user = get_user_by('email', $email);
+
+        if (!$user) {
+            wp_send_json_error(array('message' => 'Invalid email address.'));
+            return;
+        }
+
+        // Check if already verified
+        global $wpdb;
+        $table_hotels = $wpdb->prefix . 'staydesk_hotels';
+        $hotel = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table_hotels WHERE user_id = %d",
+            $user->ID
+        ));
+
+        if ($hotel && $hotel->email_confirmed) {
+            wp_send_json_error(array('message' => 'Email is already verified. You can log in now.'));
+            return;
+        }
+
+        // Generate new verification code
+        $verification_code = sprintf('%06d', mt_rand(0, 999999));
+        update_user_meta($user->ID, 'staydesk_verification_code', $verification_code);
+        update_user_meta($user->ID, 'staydesk_verification_code_expiry', time() + 3600); // Expires in 1 hour
+
+        // Send new code
+        $hotel_name = $user->display_name;
+        $this->send_verification_code_email($email, $hotel_name, $verification_code);
+
+        error_log('StayDesk Resend: New code sent');
+
+        wp_send_json_success(array(
+            'message' => 'A new verification code has been sent to your email.'
+        ));
+    }
+
+    /**
+     * Send verification code email.
+     */
+    private function send_verification_code_email($email, $hotel_name, $code) {
+        $subject = 'Your Email Verification Code - StayDesk by BendlessTech';
         
         $message = "
         <html>
         <head>
             <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background: #0066CC; color: white; padding: 20px; text-align: center; }
-                .content { padding: 30px; background: #f8f9fa; }
-                .button { background: #0066CC; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; }
+                body { 
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                    background-color: #0a0a0a;
+                    margin: 0;
+                    padding: 0;
+                }
+                .container { 
+                    max-width: 600px; 
+                    margin: 40px auto; 
+                    background: #1a1a1a;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    border: 1px solid rgba(212, 175, 55, 0.3);
+                }
+                .header { 
+                    background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+                    color: #0a0a0a; 
+                    padding: 30px; 
+                    text-align: center; 
+                }
+                .header h1 {
+                    margin: 0;
+                    font-size: 28px;
+                    font-weight: 700;
+                }
+                .content { 
+                    padding: 40px; 
+                    color: #E8E8E8;
+                }
+                .content p {
+                    line-height: 1.6;
+                    margin: 15px 0;
+                }
+                .code-box {
+                    background: #2a2a2a;
+                    border: 2px solid #D4AF37;
+                    border-radius: 12px;
+                    padding: 30px;
+                    text-align: center;
+                    margin: 30px 0;
+                }
+                .code {
+                    font-size: 42px;
+                    font-weight: 700;
+                    letter-spacing: 8px;
+                    color: #FFD700;
+                    font-family: 'Courier New', monospace;
+                }
+                .note {
+                    background: rgba(212, 175, 55, 0.1);
+                    border-left: 4px solid #D4AF37;
+                    padding: 15px;
+                    margin: 20px 0;
+                    border-radius: 4px;
+                }
+                .footer {
+                    padding: 20px 40px;
+                    background: #0a0a0a;
+                    color: #A0A0A0;
+                    font-size: 12px;
+                    text-align: center;
+                }
             </style>
         </head>
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h1>Welcome to StayDesk!</h1>
+                    <h1>✨ Welcome to StayDesk!</h1>
                 </div>
                 <div class='content'>
-                    <p>Hello {$hotel_name},</p>
+                    <p>Hello <strong>{$hotel_name}</strong>,</p>
                     <p>Thank you for signing up for StayDesk by BendlessTech!</p>
-                    <p>Please confirm your email address by clicking the button below:</p>
-                    <a href='{$confirm_url}' class='button'>Confirm Email Address</a>
-                    <p>If the button doesn't work, copy and paste this link into your browser:</p>
-                    <p>{$confirm_url}</p>
-                    <p>Best regards,<br>The BendlessTech Team</p>
+                    <p>To complete your registration, please enter the verification code below on the verification page:</p>
+                    
+                    <div class='code-box'>
+                        <div style='color: #A0A0A0; font-size: 14px; margin-bottom: 10px;'>YOUR VERIFICATION CODE</div>
+                        <div class='code'>{$code}</div>
+                    </div>
+                    
+                    <div class='note'>
+                        <strong>⏰ Important:</strong> This code will expire in 1 hour for security reasons. If it expires, you can request a new code on the verification page.
+                    </div>
+                    
+                    <p>If you didn't create an account with StayDesk, please ignore this email.</p>
+                    
+                    <p style='margin-top: 30px;'>Best regards,<br><strong>The BendlessTech Team</strong></p>
+                </div>
+                <div class='footer'>
+                    <p>© 2024 BendlessTech. All rights reserved.</p>
+                    <p>Contact us: reach@bendlesstech.com | WhatsApp: 07120018023</p>
                 </div>
             </div>
         </body>
