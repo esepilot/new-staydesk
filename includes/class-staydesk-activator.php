@@ -244,9 +244,17 @@ class Staydesk_Activator {
                 'title' => 'Sign Up - StayDesk',
                 'content' => '[staydesk_signup]'
             ),
+            'staydesk-verify-email' => array(
+                'title' => 'Verify Email - StayDesk',
+                'content' => '[staydesk_verify_email]'
+            ),
             'staydesk-dashboard' => array(
                 'title' => 'Dashboard - StayDesk',
                 'content' => '[staydesk_dashboard]'
+            ),
+            'staydesk-rooms' => array(
+                'title' => 'Room Management - StayDesk',
+                'content' => '[staydesk_rooms]'
             ),
             'staydesk-bookings' => array(
                 'title' => 'Bookings - StayDesk',

@@ -40,12 +40,29 @@ After activation, configure the following:
 - **WhatsApp API** - Set up WhatsApp Business API credentials
 - **API Key** - Generate API key for external integrations
 
+## Shortcodes
+
+The plugin provides multiple shortcodes for embedding pages anywhere in WordPress:
+
+- `[staydesk_signup]` - Hotel registration form
+- `[staydesk_login]` - Login page
+- `[staydesk_verify_email]` - Email verification with 6-digit code
+- `[staydesk_dashboard]` - Hotel dashboard
+- `[staydesk_rooms]` - Room management interface
+- `[staydesk_bookings]` - Booking management
+- `[staydesk_profile]` - Profile & settings
+- `[staydesk_pricing]` - Subscription plans
+- `[staydesk_homepage]` - Marketing landing page
+- `[staydesk_admin_dashboard]` - Admin dashboard
+
+**For complete shortcode documentation, see [SHORTCODES.md](SHORTCODES.md)**
+
 ## Usage
 
 ### For Hotels
 
 1. Sign up at `/staydesk-signup`
-2. Confirm email address
+2. Verify email with 6-digit code sent to your email
 3. Login at `/staydesk-login`
 4. Complete hotel profile
 5. Add rooms and set pricing
