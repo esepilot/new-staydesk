@@ -108,7 +108,8 @@ class Staydesk_Subscriptions {
             array(
                 'hotel_id' => $hotel->id,
                 'plan_type' => $plan_type,
-                'subscription' => true
+                'subscription' => true,
+                'callback_url' => home_url('/staydesk-profile?payment=success')
             )
         );
 

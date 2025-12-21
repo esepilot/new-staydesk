@@ -65,6 +65,13 @@ class Staydesk_Payments {
             'currency' => 'NGN',
             'metadata' => $metadata
         );
+        
+        // Add callback URL if provided
+        if (isset($metadata['callback_url'])) {
+            $fields['callback_url'] = $metadata['callback_url'];
+            unset($metadata['callback_url']); // Remove from metadata to avoid duplication
+            $fields['metadata'] = $metadata;
+        }
 
         $fields_string = json_encode($fields);
 

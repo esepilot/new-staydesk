@@ -219,6 +219,14 @@ $subscription = $wpdb->get_row($wpdb->prepare(
         
         <div id="alertBox" class="alert"></div>
         
+        <?php if (isset($_GET['payment']) && $_GET['payment'] === 'success'): ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                showAlert('✅ Payment successful! Your subscription is now active.', 'success');
+            });
+        </script>
+        <?php endif; ?>
+        
         <div class="profile-section">
             <h2>Hotel Information</h2>
             <form id="profileForm">
@@ -267,7 +275,7 @@ $subscription = $wpdb->get_row($wpdb->prepare(
                 </div>
                 <div class="info-row">
                     <label>Status</label>
-                    <span><strong style="color: #28A745;">Active</strong></span>
+                    <span><strong style="color: #28A745;">● Active</strong></span>
                 </div>
                 <div class="info-row">
                     <label>Expiry Date</label>
@@ -279,6 +287,34 @@ $subscription = $wpdb->get_row($wpdb->prepare(
                         $days = ceil((strtotime($subscription->expiry_date) - time()) / 86400);
                         echo $days . ' days';
                     ?></span>
+                </div>
+                <div class="info-row">
+                    <label>Amount</label>
+                    <span>₦<?php echo number_format($subscription->plan_price); ?>/<?php echo $subscription->plan_type === 'monthly' ? 'month' : 'year'; ?></span>
+                </div>
+                <div class="info-row">
+                    <label>Auto-Renew</label>
+                    <span><?php echo $subscription->auto_renew ? 'On' : 'Off'; ?></span>
+                </div>
+                
+                <?php if ($subscription->plan_type === 'monthly'): ?>
+                <div style="margin-top: 30px; padding: 20px; background: rgba(212, 175, 55, 0.1); border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3);">
+                    <h3 style="color: #D4AF37; margin-bottom: 15px; font-size: 1.3rem;">Upgrade to Yearly Plan</h3>
+                    <p style="color: #E8E8E8; margin-bottom: 15px;">Save ₦59,880 annually with our yearly plan!</p>
+                    <p style="color: #B8B8B8; font-size: 0.9rem; margin-bottom: 15px;">
+                        Yearly: ₦598,800/year (instead of ₦598,800)<br>
+                        10% discount for first 10 hotels!
+                    </p>
+                    <button class="btn btn-primary" onclick="upgradeToYearly()" style="background: linear-gradient(135deg, #28A745 0%, #20C997 100%);">
+                        Upgrade Now - Save ₦59,880!
+                    </button>
+                </div>
+                <?php endif; ?>
+                
+                <div style="margin-top: 20px;">
+                    <button class="btn" onclick="cancelSubscription()" style="background: #dc3545; color: #fff;">
+                        Cancel Subscription
+                    </button>
                 </div>
             <?php else: ?>
                 <p style="color: #A0A0A0;">No active subscription. <a href="<?php echo home_url('/staydesk-pricing'); ?>" style="color: #D4AF37;">Subscribe now</a></p>
@@ -312,6 +348,59 @@ $subscription = $wpdb->get_row($wpdb->prepare(
             const code = document.querySelector('.embed-code code').textContent;
             navigator.clipboard.writeText(code).then(() => {
                 showAlert('Embed code copied to clipboard!', 'success');
+            });
+        }
+        
+        function upgradeToYearly() {
+            if (!confirm('Upgrade to yearly plan and save ₦59,880 per year?')) {
+                return;
+            }
+            
+            jQuery.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'staydesk_upgrade_subscription',
+                    nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>'
+                },
+                success: function(response) {
+                    if (response.success && response.data.authorization_url) {
+                        window.location.href = response.data.authorization_url;
+                    } else {
+                        showAlert(response.data.message || 'Failed to initialize upgrade', 'error');
+                    }
+                },
+                error: function() {
+                    showAlert('An error occurred. Please try again.', 'error');
+                }
+            });
+        }
+        
+        function cancelSubscription() {
+            if (!confirm('Cancel subscription? You will keep access until your current expiry date.')) {
+                return;
+            }
+            
+            jQuery.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'staydesk_cancel_subscription',
+                    nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('Subscription cancelled successfully. Access until <?php echo isset($subscription) ? date("F d, Y", strtotime($subscription->expiry_date)) : "expiry"; ?>', 'success');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        showAlert(response.data.message || 'Failed to cancel subscription', 'error');
+                    }
+                },
+                error: function() {
+                    showAlert('An error occurred. Please try again.', 'error');
+                }
             });
         }
         
