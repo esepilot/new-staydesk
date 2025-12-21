@@ -36,13 +36,8 @@ class Staydesk_Chatbot {
             $session_id = 'session_' . uniqid();
         }
 
-        // Check if hotel subscription is active
-        if ($hotel_id > 0 && !Staydesk_Subscriptions::is_subscription_active($hotel_id)) {
-            wp_send_json_error(array(
-                'message' => 'This hotel\'s chatbot is currently unavailable. Please contact support.',
-                'fallback_whatsapp' => true
-            ));
-        }
+        // Note: Subscription check removed to allow FAQ queries for all hotels
+        // Premium features may require active subscription in future updates
 
         // Log user message
         $table_chat_logs = $wpdb->prefix . 'staydesk_chat_logs';
