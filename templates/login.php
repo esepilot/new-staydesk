@@ -52,20 +52,27 @@
         }
         
         .login-header h1 {
-            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            background: linear-gradient(90deg, #FFD700 0%, #4FC3F7 25%, #FFD700 50%, #64B5F6 75%, #FFD700 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            font-size: 2.2rem;
+            animation: sparkle 3s linear infinite;
+            font-size: 1.8rem;
             margin-bottom: 12px;
             font-weight: 800;
             letter-spacing: -0.5px;
             text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
         }
         
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+        
         .login-header p {
             color: #B8B8B8;
-            font-size: 15px;
+            font-size: 14px;
             line-height: 1.6;
         }
         
@@ -79,7 +86,7 @@
             color: #FFFFFF;
             font-weight: 700;
             letter-spacing: 0.3px;
-            font-size: 15px;
+            font-size: 14px;
         }
         
         .password-wrapper {
