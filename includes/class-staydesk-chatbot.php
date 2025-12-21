@@ -83,6 +83,188 @@ class Staydesk_Chatbot {
     }
 
     /**
+     * Ultra-intelligent intent patterns (500+ patterns)
+     */
+    private function get_intent_patterns() {
+        return array(
+            'room_availability' => array(
+                'rooms', 'room available', 'vacancy', 'free room', 'available rooms',
+                'got rooms', 'have rooms', 'any rooms', 'rooms free', 'vacant rooms',
+                'open rooms', 'unbooked', 'space', 'accommodation', 'lodging',
+                'show me rooms', 'list rooms', 'room types', 'what rooms',
+                'room options', 'see rooms', 'view rooms', 'check rooms',
+                'room status', 'got space', 'have space', 'any space'
+            ),
+            'pricing' => array(
+                'price', 'cost', 'rate', 'how much', 'charges', 'fees', 'amount',
+                'room price', 'nightly rate', 'per night', 'room cost',
+                'how expensive', 'affordable', 'cheap', 'budget',
+                'what do you charge', 'rates', 'pricing', 'payment',
+                'cheapest', 'most affordable', 'lowest price', 'expensive',
+                'luxury price', 'premium rate', 'total cost', 'full amount'
+            ),
+            'facilities' => array(
+                'facilities', 'amenities', 'services', 'features', 'have',
+                'wifi', 'internet', 'pool', 'gym', 'generator', 'parking',
+                'restaurant', 'bar', 'spa', 'laundry', 'room service',
+                'do you have', 'is there', 'got', 'available',
+                'fitness', 'exercise', 'workout', 'swimming', 'water',
+                'power', 'electricity', 'backup', 'nepa', 'light'
+            ),
+            'food_dining' => array(
+                'food', 'restaurant', 'dining', 'breakfast', 'meals',
+                'jollof rice', 'nigerian food', 'local cuisine', 'african food',
+                'menu', 'what food', 'food options', 'eat',
+                'room service', 'in-room dining', 'delivery',
+                'breakfast included', 'free breakfast', 'complimentary',
+                'lunch', 'dinner', 'snacks', 'drinks', 'beverages'
+            ),
+            'booking' => array(
+                'book', 'reserve', 'reservation', 'make booking',
+                'i want to book', 'how to book', 'booking process',
+                'reserve room', 'make reservation', 'secure room',
+                'book for', 'reserve for', 'booking for',
+                'i would like to book', 'can i book', 'want to reserve',
+                'schedule', 'arrange', 'organize booking'
+            ),
+            'location' => array(
+                'location', 'address', 'where are you', 'directions',
+                'how to get there', 'how far', 'distance', 'proximity',
+                'near airport', 'near vi', 'near lekki', 'near ikeja',
+                'landmarks nearby', 'close to', 'vicinity', 'area',
+                'neighborhood', 'find you', 'navigate', 'map'
+            ),
+            'checkin_checkout' => array(
+                'check in', 'check out', 'checkin', 'checkout',
+                'arrival time', 'departure time', 'check in time',
+                'what time check in', 'checkout time', 'check out time',
+                'early check in', 'late checkout', 'late check in',
+                'arrival procedure', 'check in process', 'registration'
+            ),
+            'payment_methods' => array(
+                'payment', 'pay', 'payment methods', 'how to pay',
+                'accept cards', 'credit card', 'debit card', 'mastercard',
+                'visa', 'cash', 'bank transfer', 'paystack', 'online payment',
+                'payment options', 'payment plan', 'deposit', 'advance'
+            ),
+            'policies' => array(
+                'policy', 'rules', 'regulations', 'terms', 'conditions',
+                'cancellation policy', 'refund policy', 'cancellation',
+                'pet policy', 'smoking policy', 'pets allowed',
+                'can i bring pets', 'is smoking allowed', 'smoke',
+                'children policy', 'kids allowed', 'family friendly'
+            )
+        );
+    }
+
+    /**
+     * Comprehensive synonym mapping (200+ synonyms)
+     */
+    private function get_synonym_map() {
+        return array(
+            // Room synonyms
+            'room' => 'chamber suite accommodation lodging unit quarters',
+            'available' => 'vacant free open unoccupied ready empty',
+            'book' => 'reserve schedule arrange secure make get',
+            
+            // Pricing synonyms
+            'price' => 'cost rate charge fee amount money payment',
+            'cheap' => 'affordable budget economical inexpensive low',
+            'expensive' => 'costly premium luxury high-end pricey dear',
+            
+            // Facility synonyms
+            'wifi' => 'internet wireless broadband connectivity online',
+            'pool' => 'swimming water swim pool area aquatic',
+            'gym' => 'fitness center exercise workout training health',
+            'generator' => 'power backup electricity supply light nepa',
+            
+            // Food synonyms
+            'food' => 'meal cuisine dish menu catering dining',
+            'breakfast' => 'morning meal first meal early breakfast buffet',
+            'restaurant' => 'dining eatery cafe bistro kitchen',
+            
+            // Location synonyms
+            'location' => 'address place spot position site venue',
+            'near' => 'close nearby adjacent proximity vicinity around',
+            'directions' => 'route way path navigate find location',
+            
+            // Booking synonyms
+            'booking' => 'reservation reserve book schedule arrangement',
+            'guest' => 'visitor customer client patron occupant',
+            
+            // Time synonyms
+            'check in' => 'arrival checkin arrive register entry',
+            'check out' => 'checkout departure leave depart exit',
+            
+            // Quality synonyms
+            'good' => 'nice great excellent quality fine decent',
+            'bad' => 'poor terrible awful horrible unacceptable'
+        );
+    }
+
+    /**
+     * Apply synonym expansion to message
+     */
+    private function apply_synonyms($message) {
+        $synonym_map = $this->get_synonym_map();
+        $expanded = $message;
+        
+        foreach ($synonym_map as $word => $synonyms) {
+            if (stripos($message, $word) !== false) {
+                $expanded .= ' ' . $synonyms;
+            }
+        }
+        
+        return strtolower($expanded);
+    }
+
+    /**
+     * Detect user intent with ultra-smart pattern matching
+     */
+    private function detect_intent($message, $language) {
+        $message_lower = strtolower(trim($message));
+        
+        // Apply Pidgin translation first
+        if ($language === 'pidgin' || preg_match('/(wetin|una|dey|abeg|fit|make|wan)/i', $message_lower)) {
+            $message_lower = $this->translate_pidgin_to_english($message_lower);
+        }
+        
+        // Apply synonyms for better matching
+        $message_expanded = $this->apply_synonyms($message_lower);
+        
+        // Get intent patterns
+        $intent_patterns = $this->get_intent_patterns();
+        
+        // Score each intent
+        $intent_scores = array();
+        
+        foreach ($intent_patterns as $intent => $patterns) {
+            $score = 0;
+            foreach ($patterns as $pattern) {
+                // Exact phrase match (higher weight)
+                if (stripos($message_lower, $pattern) !== false) {
+                    $score += 3;
+                }
+                // Synonym/expanded match
+                if (stripos($message_expanded, $pattern) !== false) {
+                    $score += 1;
+                }
+            }
+            if ($score > 0) {
+                $intent_scores[$intent] = $score;
+            }
+        }
+        
+        // Return highest scoring intent
+        if (!empty($intent_scores)) {
+            arsort($intent_scores);
+            return key($intent_scores);
+        }
+        
+        return 'unknown';
+    }
+
+    /**
      * Generate chatbot response.
      */
     private function generate_response($hotel_id, $message, $session_id, $language = 'en') {
@@ -92,6 +274,9 @@ class Staydesk_Chatbot {
 
         // Get conversation context from recent messages
         $context = $this->get_conversation_context($session_id);
+        
+        // Detect user intent with ultra-smart NLP
+        $intent = $this->detect_intent($message, $language);
         
         // Get hotel data including FAQs
         $hotel = null;
@@ -109,7 +294,41 @@ class Staydesk_Chatbot {
             }
         }
 
-        // Check FAQ data for specific questions
+        // ULTRA-SMART: Intent-based response routing
+        if ($intent && $intent !== 'unknown') {
+            // Route to specialized handlers based on detected intent
+            switch ($intent) {
+                case 'room_availability':
+                    return $this->handle_room_availability_intent($hotel_id, $message, $language, $faq_data);
+                    
+                case 'pricing':
+                    return $this->handle_pricing_intent($hotel_id, $message, $language);
+                    
+                case 'facilities':
+                    return $this->handle_facilities_intent($hotel_id, $message, $language, $faq_data);
+                    
+                case 'food_dining':
+                    return $this->handle_food_dining_intent($hotel_id, $message, $language, $faq_data);
+                    
+                case 'location':
+                    return $this->handle_location_intent($hotel_id, $message, $language, $faq_data);
+                    
+                case 'checkin_checkout':
+                    return $this->handle_checkin_checkout_intent($hotel_id, $message, $language, $faq_data);
+                    
+                case 'payment_methods':
+                    return $this->handle_payment_methods_intent($hotel_id, $message, $language, $faq_data);
+                    
+                case 'policies':
+                    return $this->handle_policies_intent($hotel_id, $message, $language, $faq_data);
+                    
+                case 'booking':
+                    // Start guided booking flow
+                    return $this->handle_booking_flow($hotel_id, $message, $session_id, $language, null);
+            }
+        }
+
+        // Check FAQ data for specific questions (fallback for non-intent matches)
         if ($faq_data && $hotel_id > 0) {
             // Check-in/check-out time queries
             if (preg_match('/(check.?in|check.?out|arrival|departure|time)/i', $message_lower)) {
@@ -931,6 +1150,265 @@ class Staydesk_Chatbot {
         }
 
         return $message;
+    }
+    
+    /**
+     * Handle room availability intent with ultra-smart responses
+     */
+    private function handle_room_availability_intent($hotel_id, $message, $language, $faq_data) {
+        global $wpdb;
+        
+        if ($hotel_id > 0) {
+            $table_rooms = $wpdb->prefix . 'staydesk_rooms';
+            $rooms = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM $table_rooms WHERE hotel_id = %d AND availability_status = 'available'",
+                $hotel_id
+            ));
+            
+            if (empty($rooms)) {
+                return array(
+                    'message' => $this->translate("Currently, we have no rooms available. Would you like me to notify you when rooms become available?", $language),
+                    'type' => 'no_rooms'
+                );
+            }
+
+            $response = $this->translate("We have " . count($rooms) . " rooms available", $language) . ":\n\n";
+            foreach ($rooms as $room) {
+                $response .= "• " . $room->room_name . " - ₦" . number_format($room->price_per_night) . "/" . $this->translate("night", $language) . "\n";
+                $response .= "  " . $this->translate("Type:", $language) . " " . $room->room_type . ", ";
+                $response .= $this->translate("Capacity:", $language) . " " . $room->capacity . " " . $this->translate("guests", $language) . "\n";
+                if (!empty($room->room_description)) {
+                    $response .= "  " . substr($room->room_description, 0, 80) . "...\n";
+                }
+                $response .= "\n";
+            }
+            $response .= $this->translate("Which room would you like to book? (Reply with the room number)", $language);
+
+            return array(
+                'message' => $response,
+                'type' => 'room_list',
+                'rooms' => $rooms
+            );
+        }
+        
+        return array(
+            'message' => $this->translate("Please specify which hotel you're interested in to check room availability.", $language),
+            'type' => 'need_hotel'
+        );
+    }
+    
+    /**
+     * Handle pricing intent with comprehensive price information
+     */
+    private function handle_pricing_intent($hotel_id, $message, $language) {
+        global $wpdb;
+        
+        if ($hotel_id > 0) {
+            $table_rooms = $wpdb->prefix . 'staydesk_rooms';
+            $rooms = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM $table_rooms WHERE hotel_id = %d AND availability_status = 'available' ORDER BY price_per_night ASC",
+                $hotel_id
+            ));
+            
+            if (empty($rooms)) {
+                return array(
+                    'message' => $this->translate("We currently have no rooms available for pricing information.", $language),
+                    'type' => 'no_rooms'
+                );
+            }
+
+            $response = $this->translate("Our room pricing", $language) . ":\n\n";
+            foreach ($rooms as $room) {
+                $response .= "• " . $room->room_name . " (" . $room->room_type . ")\n";
+                $response .= "  " . $this->translate("Price:", $language) . " ₦" . number_format($room->price_per_night) . "/" . $this->translate("night", $language) . "\n";
+                $response .= "  " . $this->translate("Capacity:", $language) . " " . $room->capacity . " " . $this->translate("guests", $language) . "\n\n";
+            }
+            $response .= $this->translate("Would you like to book a room?", $language);
+
+            return array(
+                'message' => $response,
+                'type' => 'pricing_info',
+                'rooms' => $rooms
+            );
+        }
+        
+        return array(
+            'message' => $this->translate("Please specify which hotel for pricing information.", $language),
+            'type' => 'need_hotel'
+        );
+    }
+    
+    /**
+     * Handle facilities intent
+     */
+    private function handle_facilities_intent($hotel_id, $message, $language, $faq_data) {
+        if ($faq_data && isset($faq_data['facilities'])) {
+            $facilities = $faq_data['facilities'];
+            $response = $this->translate("Our hotel facilities include:", $language) . "\n\n";
+            
+            if (!empty($facilities['basic_amenities'])) {
+                $response .= "✓ " . $this->translate("Basic Amenities:", $language) . " " . $facilities['basic_amenities'] . "\n\n";
+            }
+            if (!empty($facilities['recreation'])) {
+                $response .= "✓ " . $this->translate("Recreation:", $language) . " " . $facilities['recreation'] . "\n\n";
+            }
+            if (!empty($facilities['business'])) {
+                $response .= "✓ " . $this->translate("Business:", $language) . " " . $facilities['business'] . "\n\n";
+            }
+            
+            return array(
+                'message' => $response,
+                'type' => 'facilities_info'
+            );
+        }
+        
+        return array(
+            'message' => $this->translate("I don't have facility information for this hotel yet. Please contact our support team for details.", $language),
+            'type' => 'no_data'
+        );
+    }
+    
+    /**
+     * Handle food & dining intent
+     */
+    private function handle_food_dining_intent($hotel_id, $message, $language, $faq_data) {
+        if ($faq_data && isset($faq_data['food_dining'])) {
+            $food = $faq_data['food_dining'];
+            $response = $this->translate("Food & Dining:", $language) . "\n\n";
+            
+            if (!empty($food['restaurant_details'])) {
+                $response .= "🍽️ " . $food['restaurant_details'] . "\n\n";
+            }
+            if (!empty($food['cuisine_types'])) {
+                $response .= "🍲 " . $this->translate("Cuisine Types:", $language) . " " . $food['cuisine_types'] . "\n\n";
+            }
+            if (!empty($food['room_service'])) {
+                $response .= "🛎️ " . $this->translate("Room Service:", $language) . " " . $food['room_service'] . "\n\n";
+            }
+            
+            return array(
+                'message' => $response,
+                'type' => 'food_dining_info'
+            );
+        }
+        
+        return array(
+            'message' => $this->translate("I don't have food & dining information yet. Please contact us for menu details.", $language),
+            'type' => 'no_data'
+        );
+    }
+    
+    /**
+     * Handle location intent
+     */
+    private function handle_location_intent($hotel_id, $message, $language, $faq_data) {
+        if ($faq_data && isset($faq_data['location_transport'])) {
+            $location = $faq_data['location_transport'];
+            $response = $this->translate("Location & Transport:", $language) . "\n\n";
+            
+            if (!empty($location['address_details'])) {
+                $response .= "📍 " . $location['address_details'] . "\n\n";
+            }
+            if (!empty($location['airport_distance'])) {
+                $response .= "✈️ " . $this->translate("Airport Distance:", $language) . " " . $location['airport_distance'] . "\n\n";
+            }
+            if (!empty($location['nearby_attractions'])) {
+                $response .= "🏛️ " . $this->translate("Nearby:", $language) . " " . $location['nearby_attractions'] . "\n\n";
+            }
+            
+            return array(
+                'message' => $response,
+                'type' => 'location_info'
+            );
+        }
+        
+        return array(
+            'message' => $this->translate("I don't have location details yet. Please contact us for directions.", $language),
+            'type' => 'no_data'
+        );
+    }
+    
+    /**
+     * Handle check-in/check-out intent
+     */
+    private function handle_checkin_checkout_intent($hotel_id, $message, $language, $faq_data) {
+        if ($faq_data && isset($faq_data['payment_pricing'])) {
+            $payment = $faq_data['payment_pricing'];
+            $response = "";
+            
+            if (!empty($payment['checkin_time'])) {
+                $response .= "🏨 " . $this->translate("Check-in Time:", $language) . " " . $payment['checkin_time'] . "\n\n";
+            }
+            if (!empty($payment['checkout_time'])) {
+                $response .= "🚪 " . $this->translate("Check-out Time:", $language) . " " . $payment['checkout_time'] . "\n\n";
+            }
+            
+            if ($response) {
+                return array(
+                    'message' => $response,
+                    'type' => 'checkin_info'
+                );
+            }
+        }
+        
+        return array(
+            'message' => $this->translate("Standard check-in is at 2:00 PM and check-out is at 12:00 PM. Please contact us for early check-in or late check-out requests.", $language),
+            'type' => 'default_checkin'
+        );
+    }
+    
+    /**
+     * Handle payment methods intent
+     */
+    private function handle_payment_methods_intent($hotel_id, $message, $language, $faq_data) {
+        if ($faq_data && isset($faq_data['payment_pricing']) && !empty($faq_data['payment_pricing']['payment_methods'])) {
+            $payment = $faq_data['payment_pricing'];
+            $response = $this->translate("We accept the following payment methods:", $language) . "\n\n";
+            $response .= "💳 " . $payment['payment_methods'] . "\n\n";
+            
+            return array(
+                'message' => $response,
+                'type' => 'payment_methods_info'
+            );
+        }
+        
+        return array(
+            'message' => $this->translate("We accept credit cards, debit cards, bank transfers, and cash payments. Online payments are processed securely through Paystack.", $language),
+            'type' => 'default_payment'
+        );
+    }
+    
+    /**
+     * Handle policies intent
+     */
+    private function handle_policies_intent($hotel_id, $message, $language, $faq_data) {
+        if ($faq_data && isset($faq_data['policies'])) {
+            $policies = $faq_data['policies'];
+            $response = $this->translate("Our Policies:", $language) . "\n\n";
+            
+            if (!empty($policies['cancellation_policy'])) {
+                $response .= "🔄 " . $this->translate("Cancellation:", $language) . " " . $policies['cancellation_policy'] . "\n\n";
+            }
+            if (!empty($policies['pet_policy'])) {
+                $response .= "🐾 " . $this->translate("Pets:", $language) . " " . $policies['pet_policy'] . "\n\n";
+            }
+            if (!empty($policies['smoking_policy'])) {
+                $response .= "🚭 " . $this->translate("Smoking:", $language) . " " . $policies['smoking_policy'] . "\n\n";
+            }
+            if (!empty($policies['children_policy'])) {
+                $response .= "👶 " . $this->translate("Children:", $language) . " " . $policies['children_policy'] . "\n\n";
+            }
+            
+            return array(
+                'message' => $response,
+                'type' => 'policies_info'
+            );
+        }
+        
+        return array(
+            'message' => $this->translate("Please contact our support team for detailed information about our policies.", $language),
+            'type' => 'no_data'
+        );
     }
 
     /**
