@@ -14,9 +14,22 @@ class Staydesk_Payments {
      * Initialize the class.
      */
     public function __construct() {
-        // Get Paystack keys from WordPress options
-        $this->paystack_secret_key = get_option('staydesk_paystack_secret_key', '');
-        $this->paystack_public_key = get_option('staydesk_paystack_public_key', '');
+        // Check if test mode is enabled
+        $test_mode = get_option('staydesk_paystack_test_mode', 'no');
+        
+        if ($test_mode === 'yes') {
+            // Use test keys
+            $this->paystack_secret_key = get_option('staydesk_paystack_test_secret_key', '');
+            $this->paystack_public_key = get_option('staydesk_paystack_test_public_key', '');
+        } else {
+            // Use live keys
+            $live_secret = get_option('staydesk_paystack_live_secret_key', '');
+            $live_public = get_option('staydesk_paystack_live_public_key', '');
+            
+            // Fallback to old single keys if live keys not set
+            $this->paystack_secret_key = !empty($live_secret) ? $live_secret : get_option('staydesk_paystack_secret_key', '');
+            $this->paystack_public_key = !empty($live_public) ? $live_public : get_option('staydesk_paystack_public_key', '');
+        }
 
         // AJAX handlers
         add_action('wp_ajax_staydesk_verify_payment', array($this, 'verify_payment'));
@@ -25,9 +38,24 @@ class Staydesk_Payments {
     }
 
     /**
+     * Get public key for frontend use.
+     */
+    public function get_public_key() {
+        return $this->paystack_public_key;
+    }
+
+    /**
      * Initialize payment with Paystack.
      */
     public function initialize_payment($email, $amount, $reference, $metadata = array()) {
+        // Validate API keys are set
+        if (empty($this->paystack_secret_key)) {
+            return (object) array(
+                'status' => false,
+                'message' => 'Paystack secret key not configured. Please check your settings.'
+            );
+        }
+
         $url = "https://api.paystack.co/transaction/initialize";
 
         $fields = array(
@@ -51,9 +79,17 @@ class Staydesk_Payments {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         $result = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        return json_decode($result);
+        $response = json_decode($result);
+        
+        // Add HTTP status code to response for debugging
+        if ($response) {
+            $response->http_code = $http_code;
+        }
+
+        return $response;
     }
 
     /**

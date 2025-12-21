@@ -116,7 +116,12 @@ class Staydesk_Subscriptions {
                 'reference' => $reference
             ));
         } else {
-            wp_send_json_error(array('message' => 'Failed to initialize payment.'));
+            // Provide more detailed error message
+            $error_message = 'Failed to initialize payment.';
+            if ($payment_init && isset($payment_init->message)) {
+                $error_message .= ' ' . $payment_init->message;
+            }
+            wp_send_json_error(array('message' => $error_message, 'debug' => $payment_init));
         }
     }
 
