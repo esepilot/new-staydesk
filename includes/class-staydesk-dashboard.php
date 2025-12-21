@@ -19,6 +19,8 @@ class Staydesk_Dashboard {
         
         // AJAX handlers
         add_action('wp_ajax_staydesk_update_profile', array($this, 'update_profile'));
+        add_action('wp_ajax_staydesk_save_hotel_info', array($this, 'save_hotel_info'));
+        add_action('wp_ajax_nopriv_staydesk_save_hotel_info', array($this, 'save_hotel_info'));
     }
 
     /**
@@ -174,5 +176,111 @@ class Staydesk_Dashboard {
         ));
 
         return $data;
+    }
+
+    /**
+     * Save hotel FAQ information.
+     */
+    public function save_hotel_info() {
+        global $wpdb;
+
+        // Verify nonce
+        check_ajax_referer('staydesk_nonce', 'nonce');
+
+        // Check if user is logged in
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Please login to save hotel information.'));
+        }
+
+        $current_user = wp_get_current_user();
+        $table_hotels = $wpdb->prefix . 'staydesk_hotels';
+
+        // Get hotel ID for current user
+        $hotel = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table_hotels WHERE user_id = %d",
+            $current_user->ID
+        ));
+
+        if (!$hotel) {
+            wp_send_json_error(array('message' => 'Hotel profile not found.'));
+        }
+
+        // Sanitize and prepare FAQ data
+        $payment_pricing = array(
+            'checkin_time' => sanitize_text_field($_POST['checkin_time'] ?? ''),
+            'checkout_time' => sanitize_text_field($_POST['checkout_time'] ?? ''),
+            'payment_methods' => sanitize_textarea_field($_POST['payment_methods'] ?? ''),
+            'deposit_policy' => sanitize_textarea_field($_POST['deposit_policy'] ?? ''),
+            'cancellation_policy' => sanitize_textarea_field($_POST['cancellation_policy'] ?? '')
+        );
+
+        $facilities = array(
+            'basic_amenities' => sanitize_textarea_field($_POST['basic_amenities'] ?? ''),
+            'recreation' => sanitize_textarea_field($_POST['recreation'] ?? ''),
+            'business' => sanitize_textarea_field($_POST['business'] ?? ''),
+            'accessibility' => sanitize_textarea_field($_POST['accessibility'] ?? '')
+        );
+
+        $location_transport = array(
+            'address_details' => sanitize_textarea_field($_POST['address_details'] ?? ''),
+            'nearby_attractions' => sanitize_textarea_field($_POST['nearby_attractions'] ?? ''),
+            'transport_options' => sanitize_textarea_field($_POST['transport_options'] ?? ''),
+            'airport_distance' => sanitize_text_field($_POST['airport_distance'] ?? '')
+        );
+
+        $food_dining = array(
+            'restaurant_details' => sanitize_textarea_field($_POST['restaurant_details'] ?? ''),
+            'cuisine_types' => sanitize_textarea_field($_POST['cuisine_types'] ?? ''),
+            'dining_hours' => sanitize_text_field($_POST['dining_hours'] ?? ''),
+            'room_service' => sanitize_textarea_field($_POST['room_service'] ?? ''),
+            'special_diets' => sanitize_textarea_field($_POST['special_diets'] ?? '')
+        );
+
+        $policies = array(
+            'pet_policy' => sanitize_textarea_field($_POST['pet_policy'] ?? ''),
+            'smoking_policy' => sanitize_textarea_field($_POST['smoking_policy'] ?? ''),
+            'children_policy' => sanitize_textarea_field($_POST['children_policy'] ?? ''),
+            'payment_policy' => sanitize_textarea_field($_POST['payment_policy'] ?? '')
+        );
+
+        $services = array(
+            'event_hosting' => sanitize_textarea_field($_POST['event_hosting'] ?? ''),
+            'business_services' => sanitize_textarea_field($_POST['business_services'] ?? ''),
+            'laundry' => sanitize_textarea_field($_POST['laundry'] ?? ''),
+            'concierge' => sanitize_textarea_field($_POST['concierge'] ?? '')
+        );
+
+        $safety_security = array(
+            'security_measures' => sanitize_textarea_field($_POST['security_measures'] ?? ''),
+            'emergency_procedures' => sanitize_textarea_field($_POST['emergency_procedures'] ?? ''),
+            'safe_deposit' => sanitize_textarea_field($_POST['safe_deposit'] ?? ''),
+            'cctv' => sanitize_text_field($_POST['cctv'] ?? '')
+        );
+
+        $additional_faqs = sanitize_textarea_field($_POST['additional_faqs'] ?? '');
+
+        // Update hotel record
+        $updated = $wpdb->update(
+            $table_hotels,
+            array(
+                'payment_pricing' => json_encode($payment_pricing),
+                'facilities' => json_encode($facilities),
+                'location_transport' => json_encode($location_transport),
+                'food_dining' => json_encode($food_dining),
+                'policies' => json_encode($policies),
+                'services' => json_encode($services),
+                'safety_security' => json_encode($safety_security),
+                'additional_faqs' => $additional_faqs
+            ),
+            array('id' => $hotel->id),
+            array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'),
+            array('%d')
+        );
+
+        if ($updated !== false) {
+            wp_send_json_success(array('message' => 'Hotel information saved successfully!'));
+        } else {
+            wp_send_json_error(array('message' => 'Failed to save hotel information. Please try again.'));
+        }
     }
 }

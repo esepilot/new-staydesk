@@ -78,14 +78,180 @@ class Staydesk_Chatbot {
 
         $message_lower = strtolower($message);
 
-        // Get hotel data
+        // Get hotel data including FAQs
         $hotel = null;
+        $faq_data = null;
         if ($hotel_id > 0) {
             $table_hotels = $wpdb->prefix . 'staydesk_hotels';
             $hotel = $wpdb->get_row($wpdb->prepare(
                 "SELECT * FROM $table_hotels WHERE id = %d",
                 $hotel_id
             ));
+            
+            // Get FAQ data for context
+            if ($hotel) {
+                $faq_data = $this->get_hotel_faq_data($hotel);
+            }
+        }
+
+        // Check FAQ data for specific questions
+        if ($faq_data && $hotel_id > 0) {
+            // Check-in/check-out time queries
+            if (preg_match('/(check.?in|check.?out|arrival|departure|time)/i', $message_lower)) {
+                $payment_pricing = $faq_data['payment_pricing'] ?? array();
+                if (!empty($payment_pricing['checkin_time']) || !empty($payment_pricing['checkout_time'])) {
+                    $response = "Our check-in time is " . ($payment_pricing['checkin_time'] ?: '2:00 PM') . 
+                               " and check-out time is " . ($payment_pricing['checkout_time'] ?: '12:00 PM') . ".";
+                    return array(
+                        'message' => $this->translate($response, $language),
+                        'type' => 'faq_response'
+                    );
+                }
+            }
+
+            // Payment method queries
+            if (preg_match('/(payment|pay|paystack|card|cash|transfer)/i', $message_lower)) {
+                $payment_pricing = $faq_data['payment_pricing'] ?? array();
+                if (!empty($payment_pricing['payment_methods'])) {
+                    return array(
+                        'message' => $this->translate("We accept the following payment methods: " . $payment_pricing['payment_methods'], $language),
+                        'type' => 'faq_response'
+                    );
+                }
+            }
+
+            // Facilities queries (generator, pool, WiFi, etc.)
+            if (preg_match('/(generator|power|light|nepa|pool|gym|wifi|internet|facility|amenity)/i', $message_lower)) {
+                $facilities = $faq_data['facilities'] ?? array();
+                $response = "";
+                
+                if (preg_match('/(generator|power|light|nepa)/i', $message_lower) && !empty($facilities['basic_amenities'])) {
+                    $response = "Power/Generator information: " . $facilities['basic_amenities'];
+                } elseif (!empty($facilities['basic_amenities'])) {
+                    $response = "Our facilities include: " . $facilities['basic_amenities'];
+                }
+                
+                if (!empty($facilities['recreation'])) {
+                    $response .= " Recreation: " . $facilities['recreation'];
+                }
+                
+                if ($response) {
+                    return array(
+                        'message' => $this->translate($response, $language),
+                        'type' => 'faq_response'
+                    );
+                }
+            }
+
+            // Food/dining queries (Jollof rice, Nigerian food, etc.)
+            if (preg_match('/(food|eat|restaurant|dining|jollof|rice|meal|breakfast|dinner|lunch)/i', $message_lower)) {
+                $food_dining = $faq_data['food_dining'] ?? array();
+                $response = "";
+                
+                if (!empty($food_dining['restaurant_details'])) {
+                    $response = $food_dining['restaurant_details'];
+                }
+                if (!empty($food_dining['cuisine_types'])) {
+                    $response .= " We serve: " . $food_dining['cuisine_types'];
+                }
+                if (!empty($food_dining['room_service'])) {
+                    $response .= " Room service: " . $food_dining['room_service'];
+                }
+                
+                if ($response) {
+                    return array(
+                        'message' => $this->translate($response, $language),
+                        'type' => 'faq_response'
+                    );
+                }
+            }
+
+            // Location queries (airport, VI, Lekki, distance)
+            if (preg_match('/(location|where|address|airport|victoria island|lekki|ikoyi|distance|far)/i', $message_lower)) {
+                $location = $faq_data['location_transport'] ?? array();
+                $response = "";
+                
+                if (!empty($location['address_details'])) {
+                    $response = "Location: " . $location['address_details'];
+                }
+                if (!empty($location['airport_distance'])) {
+                    $response .= " Distance from airport: " . $location['airport_distance'];
+                }
+                if (!empty($location['nearby_attractions'])) {
+                    $response .= " Nearby: " . $location['nearby_attractions'];
+                }
+                
+                if ($response) {
+                    return array(
+                        'message' => $this->translate($response, $language),
+                        'type' => 'faq_response'
+                    );
+                }
+            }
+
+            // Policy queries (pets, smoking, children, cancellation)
+            if (preg_match('/(pet|dog|cat|animal|smoking|smoke|cigarette|children|child|kid|cancel|refund)/i', $message_lower)) {
+                $policies = $faq_data['policies'] ?? array();
+                $response = "";
+                
+                if (preg_match('/(pet|dog|cat|animal)/i', $message_lower) && !empty($policies['pet_policy'])) {
+                    $response = "Pet policy: " . $policies['pet_policy'];
+                } elseif (preg_match('/(smoking|smoke|cigarette)/i', $message_lower) && !empty($policies['smoking_policy'])) {
+                    $response = "Smoking policy: " . $policies['smoking_policy'];
+                } elseif (preg_match('/(children|child|kid)/i', $message_lower) && !empty($policies['children_policy'])) {
+                    $response = "Children policy: " . $policies['children_policy'];
+                } elseif (preg_match('/(cancel|refund)/i', $message_lower) && !empty($policies['payment_policy'])) {
+                    $response = "Cancellation/Refund policy: " . $policies['payment_policy'];
+                }
+                
+                if ($response) {
+                    return array(
+                        'message' => $this->translate($response, $language),
+                        'type' => 'faq_response'
+                    );
+                }
+            }
+
+            // Services queries (wedding, conference, laundry, event)
+            if (preg_match('/(wedding|event|conference|meeting|laundry|dry.?clean|concierge)/i', $message_lower)) {
+                $services = $faq_data['services'] ?? array();
+                $response = "";
+                
+                if (preg_match('/(wedding|event)/i', $message_lower) && !empty($services['event_hosting'])) {
+                    $response = "Event hosting: " . $services['event_hosting'];
+                } elseif (preg_match('/(conference|meeting)/i', $message_lower) && !empty($services['business_services'])) {
+                    $response = "Business services: " . $services['business_services'];
+                } elseif (preg_match('/(laundry|dry.?clean)/i', $message_lower) && !empty($services['laundry'])) {
+                    $response = "Laundry services: " . $services['laundry'];
+                }
+                
+                if ($response) {
+                    return array(
+                        'message' => $this->translate($response, $language),
+                        'type' => 'faq_response'
+                    );
+                }
+            }
+
+            // Security/safety queries
+            if (preg_match('/(safe|security|guard|cctv|camera|emergency)/i', $message_lower)) {
+                $safety = $faq_data['safety_security'] ?? array();
+                $response = "";
+                
+                if (!empty($safety['security_measures'])) {
+                    $response = "Security: " . $safety['security_measures'];
+                }
+                if (!empty($safety['cctv'])) {
+                    $response .= " CCTV: " . $safety['cctv'];
+                }
+                
+                if ($response) {
+                    return array(
+                        'message' => $this->translate($response, $language),
+                        'type' => 'faq_response'
+                    );
+                }
+            }
         }
 
         // Check for greeting
@@ -220,6 +386,45 @@ class Staydesk_Chatbot {
             'fallback_whatsapp' => true,
             'whatsapp_link' => 'https://wa.me/2347120018023?text=' . urlencode($message)
         );
+    }
+
+    /**
+     * Get hotel FAQ data.
+     */
+    private function get_hotel_faq_data($hotel) {
+        if (!$hotel) {
+            return null;
+        }
+
+        $faq_data = array();
+
+        // Decode JSON fields
+        if (!empty($hotel->payment_pricing)) {
+            $faq_data['payment_pricing'] = json_decode($hotel->payment_pricing, true) ?: array();
+        }
+        if (!empty($hotel->facilities)) {
+            $faq_data['facilities'] = json_decode($hotel->facilities, true) ?: array();
+        }
+        if (!empty($hotel->location_transport)) {
+            $faq_data['location_transport'] = json_decode($hotel->location_transport, true) ?: array();
+        }
+        if (!empty($hotel->food_dining)) {
+            $faq_data['food_dining'] = json_decode($hotel->food_dining, true) ?: array();
+        }
+        if (!empty($hotel->policies)) {
+            $faq_data['policies'] = json_decode($hotel->policies, true) ?: array();
+        }
+        if (!empty($hotel->services)) {
+            $faq_data['services'] = json_decode($hotel->services, true) ?: array();
+        }
+        if (!empty($hotel->safety_security)) {
+            $faq_data['safety_security'] = json_decode($hotel->safety_security, true) ?: array();
+        }
+        if (!empty($hotel->additional_faqs)) {
+            $faq_data['additional_faqs'] = $hotel->additional_faqs;
+        }
+
+        return $faq_data;
     }
 
     /**
