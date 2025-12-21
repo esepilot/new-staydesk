@@ -20,6 +20,9 @@ class Staydesk_Subscriptions {
         // AJAX handlers
         add_action('wp_ajax_staydesk_subscribe', array($this, 'subscribe'));
         add_action('wp_ajax_staydesk_cancel_subscription', array($this, 'cancel_subscription'));
+        add_action('wp_ajax_staydesk_upgrade_subscription', array($this, 'upgrade_subscription'));
+        add_action('wp_ajax_staydesk_get_subscription_status', array($this, 'get_subscription_status'));
+        add_action('wp_ajax_staydesk_toggle_auto_renew', array($this, 'toggle_auto_renew'));
 
         // Cron job for checking expired subscriptions
         add_action('staydesk_check_expired_subscriptions', array($this, 'check_expired_subscriptions'));
@@ -264,6 +267,154 @@ class Staydesk_Subscriptions {
         }
 
         return true;
+    }
+
+    /**
+     * Upgrade subscription from monthly to yearly.
+     */
+    public function upgrade_subscription() {
+        check_ajax_referer('staydesk_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Access denied.'));
+        }
+
+        global $wpdb;
+        $user_id = get_current_user_id();
+        
+        $table_hotels = $wpdb->prefix . 'staydesk_hotels';
+        $hotel = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table_hotels WHERE user_id = %d",
+            $user_id
+        ));
+
+        if (!$hotel) {
+            wp_send_json_error(array('message' => 'Hotel not found.'));
+        }
+
+        if ($hotel->subscription_plan !== 'monthly') {
+            wp_send_json_error(array('message' => 'You are already on a yearly plan.'));
+        }
+
+        // Calculate prorated refund for remaining monthly days
+        $current_time = strtotime(current_time('mysql'));
+        $expiry_time = strtotime($hotel->subscription_expiry);
+        $remaining_days = max(0, ceil(($expiry_time - $current_time) / 86400));
+        $days_in_month = 30;
+        $prorated_refund = floor((self::MONTHLY_PRICE / $days_in_month) * $remaining_days);
+
+        // Calculate yearly price with discount
+        $yearly_price = self::YEARLY_PRICE;
+        $discount = $hotel->discount_applied ? ($yearly_price * (self::DISCOUNT_PERCENTAGE / 100)) : 0;
+        $final_price = $yearly_price - $discount - $prorated_refund;
+
+        // Create upgrade transaction
+        $reference = Staydesk_Payments::create_transaction(null, $hotel->id, $final_price, 'subscription_upgrade');
+
+        // Initialize payment
+        $payments = new Staydesk_Payments();
+        $payment_init = $payments->initialize_payment(
+            $hotel->hotel_email,
+            $final_price,
+            $reference,
+            array(
+                'hotel_id' => $hotel->id,
+                'plan_type' => 'yearly',
+                'subscription' => true,
+                'upgrade' => true
+            )
+        );
+
+        if ($payment_init && $payment_init->status) {
+            wp_send_json_success(array(
+                'message' => 'Upgrade initiated!',
+                'authorization_url' => $payment_init->data->authorization_url,
+                'reference' => $reference,
+                'prorated_refund' => $prorated_refund,
+                'discount' => $discount,
+                'final_price' => $final_price
+            ));
+        } else {
+            $error_message = 'Failed to initialize upgrade payment.';
+            if ($payment_init && isset($payment_init->message)) {
+                $error_message .= ' ' . $payment_init->message;
+            }
+            wp_send_json_error(array('message' => $error_message));
+        }
+    }
+
+    /**
+     * Get subscription status.
+     */
+    public function get_subscription_status() {
+        check_ajax_referer('staydesk_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Access denied.'));
+        }
+
+        global $wpdb;
+        $user_id = get_current_user_id();
+        
+        $table_hotels = $wpdb->prefix . 'staydesk_hotels';
+        $hotel = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table_hotels WHERE user_id = %d",
+            $user_id
+        ));
+
+        if (!$hotel) {
+            wp_send_json_error(array('message' => 'Hotel not found.'));
+        }
+
+        $table_subscriptions = $wpdb->prefix . 'staydesk_subscriptions';
+        $subscription = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table_subscriptions WHERE hotel_id = %d ORDER BY created_at DESC LIMIT 1",
+            $hotel->id
+        ));
+
+        wp_send_json_success(array(
+            'status' => $hotel->subscription_status,
+            'plan' => $hotel->subscription_plan,
+            'expiry' => $hotel->subscription_expiry,
+            'subscription' => $subscription
+        ));
+    }
+
+    /**
+     * Toggle auto-renew.
+     */
+    public function toggle_auto_renew() {
+        check_ajax_referer('staydesk_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Access denied.'));
+        }
+
+        global $wpdb;
+        $user_id = get_current_user_id();
+        $auto_renew = intval($_POST['auto_renew']); // 0 or 1
+        
+        $table_hotels = $wpdb->prefix . 'staydesk_hotels';
+        $hotel = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table_hotels WHERE user_id = %d",
+            $user_id
+        ));
+
+        if (!$hotel) {
+            wp_send_json_error(array('message' => 'Hotel not found.'));
+        }
+
+        $table_subscriptions = $wpdb->prefix . 'staydesk_subscriptions';
+        $wpdb->update(
+            $table_subscriptions,
+            array('auto_renew' => $auto_renew),
+            array('hotel_id' => $hotel->id, 'status' => 'active')
+        );
+
+        wp_send_json_success(array(
+            'message' => $auto_renew ? 'Auto-renew enabled.' : 'Auto-renew disabled.',
+            'auto_renew' => $auto_renew
+        ));
     }
 }
 

@@ -129,25 +129,72 @@ class Staydesk_Payments {
                 array('transaction_reference' => $reference)
             );
 
-            // Update booking payment status if it's a booking payment
+            // Get transaction details
             $transaction = $wpdb->get_row($wpdb->prepare(
                 "SELECT * FROM $table_transactions WHERE transaction_reference = %s",
                 $reference
             ));
 
-            if ($transaction && $transaction->booking_id) {
+            // Check if this is a subscription payment
+            $metadata = $response->data->metadata;
+            if ($metadata && isset($metadata->subscription) && $metadata->subscription) {
+                // Activate subscription
+                $hotel_id = $metadata->hotel_id;
+                $plan_type = $metadata->plan_type;
+                
+                // Calculate expiry date
+                $expiry_date = ($plan_type === 'monthly') 
+                    ? date('Y-m-d H:i:s', strtotime('+1 month')) 
+                    : date('Y-m-d H:i:s', strtotime('+1 year'));
+                
+                // Update hotel subscription status
+                $table_hotels = $wpdb->prefix . 'staydesk_hotels';
+                $wpdb->update(
+                    $table_hotels,
+                    array(
+                        'subscription_status' => 'active',
+                        'subscription_plan' => $plan_type,
+                        'subscription_expiry' => $expiry_date
+                    ),
+                    array('id' => $hotel_id)
+                );
+                
+                // Update subscription record
+                $table_subscriptions = $wpdb->prefix . 'staydesk_subscriptions';
+                $wpdb->update(
+                    $table_subscriptions,
+                    array(
+                        'status' => 'active',
+                        'expiry_date' => $expiry_date
+                    ),
+                    array('hotel_id' => $hotel_id, 'status' => 'pending')
+                );
+                
+                wp_send_json_success(array(
+                    'message' => 'Payment verified and subscription activated!',
+                    'data' => $response->data,
+                    'subscription_status' => 'active',
+                    'expiry_date' => $expiry_date
+                ));
+            } else if ($transaction && $transaction->booking_id) {
+                // Update booking payment status if it's a booking payment
                 $table_bookings = $wpdb->prefix . 'staydesk_bookings';
                 $wpdb->update(
                     $table_bookings,
                     array('payment_status' => 'paid', 'booking_status' => 'confirmed'),
                     array('id' => $transaction->booking_id)
                 );
+                
+                wp_send_json_success(array(
+                    'message' => 'Payment verified successfully!',
+                    'data' => $response->data
+                ));
+            } else {
+                wp_send_json_success(array(
+                    'message' => 'Payment verified successfully!',
+                    'data' => $response->data
+                ));
             }
-
-            wp_send_json_success(array(
-                'message' => 'Payment verified successfully!',
-                'data' => $response->data
-            ));
         } else {
             wp_send_json_error(array('message' => 'Payment verification failed.'));
         }
