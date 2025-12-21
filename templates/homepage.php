@@ -45,7 +45,7 @@
         }
         
         .hero-content h1 {
-            font-size: 5rem;
+            font-size: 3.8rem;
             font-weight: 900;
             margin-bottom: 30px;
             line-height: 1.1;
@@ -54,33 +54,34 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             letter-spacing: -2px;
-            text-shadow: 0 0 60px rgba(212, 175, 55, 0.3);
+            text-shadow: 0 2px 12px rgba(212, 175, 55, 0.3);
         }
         
         .hero-content p {
-            font-size: 1.6rem;
+            font-size: 1.3rem;
             margin-bottom: 50px;
-            color: #E8E8E8;
+            color: #F0F0F0;
             font-weight: 300;
             letter-spacing: 0.5px;
+            line-height: 1.6;
         }
             opacity: 0.95;
         }
         
         .cta-buttons {
             display: flex;
-            gap: 25px;
+            gap: 20px;
             justify-content: center;
             flex-wrap: wrap;
         }
         
         .btn-primary, .btn-secondary {
-            padding: 18px 50px;
-            font-size: 1.15rem;
+            padding: 15px 40px;
+            font-size: 15px;
             border-radius: 12px;
             text-decoration: none;
             display: inline-block;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 700;
             letter-spacing: 0.5px;
             position: relative;

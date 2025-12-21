@@ -31,17 +31,17 @@ $hotel_info = json_decode($hotel->hotel_info_json, true) ?: array();
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
         min-height: 100vh;
-        padding: 30px;
-        color: #E8E8E8;
+        padding: 25px;
+        color: #F0F0F0;
     }
     
     .info-header {
         background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-        padding: 35px;
+        padding: 25px;
         border-radius: 18px;
         margin-bottom: 30px;
         box-shadow: 0 6px 30px rgba(0, 0, 0, 0.6);
-        border: 1px solid rgba(212, 175, 55, 0.2);
+        border: 1px solid rgba(212, 175, 55, 0.3);
     }
     
     .info-header h1 {
@@ -52,31 +52,32 @@ $hotel_info = json_decode($hotel->hotel_info_json, true) ?: array();
         margin: 0 0 10px 0;
         font-size: 2.2rem;
         font-weight: 800;
+        text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
     }
     
     .info-header p {
-        color: #A0A0A0;
+        color: #B8B8B8;
         margin: 0;
-        font-size: 1.1rem;
+        font-size: 15px;
     }
     
     .accordion-section {
         background: rgba(26, 26, 26, 0.9);
         border-radius: 12px;
         margin-bottom: 20px;
-        border: 1px solid rgba(212, 175, 55, 0.15);
+        border: 1px solid rgba(212, 175, 55, 0.25);
         overflow: hidden;
     }
     
     .accordion-header {
-        padding: 20px 25px;
+        padding: 18px 25px;
         cursor: pointer;
         background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        border-bottom: 1px solid rgba(212, 175, 55, 0.3);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .accordion-header:hover {
@@ -86,13 +87,13 @@ $hotel_info = json_decode($hotel->hotel_info_json, true) ?: array();
     .accordion-header h3 {
         margin: 0;
         color: #FFD700;
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         font-weight: 700;
     }
     
     .accordion-icon {
-        font-size: 1.5rem;
-        transition: transform 0.3s ease;
+        font-size: 1.4rem;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .accordion-header.active .accordion-icon {
