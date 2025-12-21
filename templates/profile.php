@@ -51,14 +51,14 @@ $subscription = $wpdb->get_row($wpdb->prepare(
         
         .page-header {
             background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            padding: 35px;
+            padding: 25px;
             border-radius: 18px;
-            margin-bottom: 35px;
+            margin-bottom: 30px;
             box-shadow: 0 6px 30px rgba(0, 0, 0, 0.6);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            border: 1px solid rgba(212, 175, 55, 0.3);
         }
         
         .page-header h1 {
@@ -67,23 +67,24 @@ $subscription = $wpdb->get_row($wpdb->prepare(
             -webkit-text-fill-color: transparent;
             background-clip: text;
             font-weight: 800;
-            font-size: 2.5rem;
+            font-size: 2.2rem;
+            text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
         }
         
         .btn {
-            padding: 14px 28px;
+            padding: 15px 30px;
             border: none;
             border-radius: 10px;
             cursor: pointer;
             font-weight: 700;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            font-size: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .btn-back {
             background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-            color: #E8E8E8;
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            color: #F0F0F0;
+            border: 1px solid rgba(212, 175, 55, 0.3);
         }
         
         .btn-primary {
@@ -94,23 +95,23 @@ $subscription = $wpdb->get_row($wpdb->prepare(
         
         .profile-section {
             background: #1a1a1a;
-            padding: 35px;
+            padding: 25px;
             border-radius: 18px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             box-shadow: 0 6px 30px rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            border: 1px solid rgba(212, 175, 55, 0.3);
         }
         
         .profile-section h2 {
             color: #D4AF37;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             font-size: 1.8rem;
         }
         
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
+            gap: 20px;
         }
         
         .form-group {
@@ -119,9 +120,10 @@ $subscription = $wpdb->get_row($wpdb->prepare(
         
         .form-group label {
             display: block;
-            color: #E8E8E8;
+            color: #FFFFFF;
             margin-bottom: 8px;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 15px;
         }
         
         .form-group input,

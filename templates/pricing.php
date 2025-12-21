@@ -13,11 +13,11 @@
         
         .pricing-header {
             text-align: center;
-            margin-bottom: 80px;
+            margin-bottom: 60px;
         }
         
         .pricing-header h1 {
-            font-size: 3.5rem;
+            font-size: 2.8rem;
             background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -25,30 +25,31 @@
             margin-bottom: 20px;
             font-weight: 800;
             letter-spacing: -1px;
+            text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
         }
         
         .pricing-header p {
-            font-size: 1.3rem;
-            color: #A0A0A0;
+            font-size: 1.1rem;
+            color: #B8B8B8;
         }
         
         .pricing-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: 50px;
+            gap: 40px;
             max-width: 1100px;
             margin: 0 auto;
         }
         
         .pricing-card {
             background: #1a1a1a;
-            padding: 55px 45px;
+            padding: 40px 35px;
             border-radius: 24px;
             box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            border: 1px solid rgba(212, 175, 55, 0.3);
         }
         
         .pricing-card::before {
@@ -61,7 +62,7 @@
             background: linear-gradient(135deg, #D4AF37, #FFD700);
             border-radius: 24px;
             opacity: 0;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.3s ease;
             z-index: -1;
         }
         
@@ -70,7 +71,7 @@
         }
         
         .pricing-card:hover {
-            transform: translateY(-15px) scale(1.02);
+            transform: translateY(-8px) scale(1.02);
             box-shadow: 0 20px 60px rgba(212, 175, 55, 0.4);
             background: #2a2a2a;
         }
@@ -95,15 +96,15 @@
         }
         
         .plan-name {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 800;
-            margin-bottom: 25px;
-            color: #E8E8E8;
+            margin-bottom: 20px;
+            color: #F0F0F0;
             letter-spacing: -0.5px;
         }
         
         .plan-price {
-            font-size: 3.5rem;
+            font-size: 2.8rem;
             font-weight: 900;
             background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
             -webkit-background-clip: text;
@@ -113,8 +114,8 @@
         }
         
         .plan-price small {
-            font-size: 1.3rem;
-            color: #A0A0A0;
+            font-size: 1.1rem;
+            color: #B8B8B8;
             font-weight: 600;
         }
         
