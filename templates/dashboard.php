@@ -34,15 +34,15 @@ $dashboard_data = Staydesk_Dashboard::get_dashboard_data($hotel->id);
         
         .dashboard-header {
             background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            padding: 35px;
+            padding: 25px;
             border-radius: 18px;
-            margin-bottom: 35px;
+            margin-bottom: 30px;
             box-shadow: 0 6px 30px rgba(0, 0, 0, 0.6);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            border: 1px solid rgba(212, 175, 55, 0.3);
         }
         
         .header-left h1 {
@@ -53,10 +53,14 @@ $dashboard_data = Staydesk_Dashboard::get_dashboard_data($hotel->id);
             margin-bottom: 8px;
             font-weight: 800;
             letter-spacing: -0.5px;
+            font-size: 2.2rem;
+            text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
         }
         
         .header-left p {
-            color: #A0A0A0;
+            color: #B8B8B8;
+            font-size: 15px;
+            line-height: 1.6;
         }
         
         .header-right {
@@ -94,18 +98,18 @@ $dashboard_data = Staydesk_Dashboard::get_dashboard_data($hotel->id);
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 28px;
-            margin-bottom: 35px;
+            gap: 20px;
+            margin-bottom: 30px;
         }
         
         .stat-card {
             background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            padding: 35px;
+            padding: 25px;
             border-radius: 18px;
             box-shadow: 0 6px 30px rgba(0, 0, 0, 0.5);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             animation: fadeInUp 0.6s ease-out;
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            border: 1px solid rgba(212, 175, 55, 0.3);
             position: relative;
             overflow: hidden;
         }
@@ -135,19 +139,21 @@ $dashboard_data = Staydesk_Dashboard::get_dashboard_data($hotel->id);
         }
         
         .stat-icon {
-            font-size: 2.8rem;
-            margin-bottom: 18px;
+            font-size: 2.2rem;
+            margin-bottom: 15px;
             filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.5));
         }
         
         .stat-value {
-            font-size: 2.8rem;
+            font-size: 2rem;
             font-weight: 900;
             background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 8px;
+            text-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+        }
         }
         
         .stat-label {
