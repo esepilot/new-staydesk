@@ -384,6 +384,60 @@ $dashboard_data = Staydesk_Dashboard::get_dashboard_data($hotel->id);
     Staydesk_Chatbot::render_dashboard_widget($hotel->id);
     ?>
     
+    <!-- WhatsApp Support Widget -->
+    <div id="whatsapp-support-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+        <style>
+            #whatsapp-support-widget .whatsapp-toggle {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+                border: none;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 26px;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                text-decoration: none;
+                color: #FFFFFF;
+            }
+            
+            #whatsapp-support-widget .whatsapp-toggle:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6);
+            }
+            
+            #whatsapp-support-widget .whatsapp-tooltip {
+                position: absolute;
+                bottom: 10px;
+                right: 65px;
+                background: #1a1a1a;
+                color: #FFFFFF;
+                padding: 8px 12px;
+                border-radius: 8px;
+                font-size: 13px;
+                white-space: nowrap;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s;
+                border: 1px solid rgba(37, 211, 102, 0.3);
+            }
+            
+            #whatsapp-support-widget:hover .whatsapp-tooltip {
+                opacity: 1;
+            }
+        </style>
+        <span class="whatsapp-tooltip">Contact Support</span>
+        <a href="https://wa.me/2348012345678?text=Hello,%20I%20need%20help%20with%20StayDesk" 
+           target="_blank" 
+           class="whatsapp-toggle" 
+           title="WhatsApp Support">
+            💬
+        </a>
+    </div>
+    
     <script>
         // Real-time clock
         function updateClock() {

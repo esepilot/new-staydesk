@@ -326,13 +326,47 @@ $bookings = $wpdb->get_results($wpdb->prepare("
                                 <td>
                                     <?php if ($booking->booking_status === 'pending'): ?>
                                         <button class="btn btn-primary btn-sm" onclick="updateStatus(<?php echo $booking->id; ?>, 'confirmed')">Confirm</button>
+                                    <?php elseif ($booking->booking_status === 'confirmed'): ?>
+                                        <button class="btn btn-primary btn-sm" onclick="updateStatus(<?php echo $booking->id; ?>, 'completed')">Complete</button>
                                     <?php endif; ?>
+                                    <button class="btn btn-secondary btn-sm" onclick="editBooking(<?php echo $booking->id; ?>)">Edit</button>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteBooking(<?php echo $booking->id; ?>)">Delete</button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             <?php endif; ?>
+        </div>
+    </div>
+    
+    <!-- Edit Booking Modal -->
+    <div id="editBookingModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: #1a1a1a; padding: 30px; border-radius: 18px; max-width: 500px; width: 90%; border: 1px solid rgba(212, 175, 55, 0.3);">
+            <h2 style="color: #D4AF37; margin-bottom: 20px;">Edit Booking</h2>
+            <form id="editBookingForm">
+                <input type="hidden" id="edit_booking_id">
+                <div style="margin-bottom: 15px;">
+                    <label style="color: #FFFFFF; display: block; margin-bottom: 5px;">Check-in Date:</label>
+                    <input type="date" id="edit_check_in" required style="width: 100%; padding: 10px; background: #2a2a2a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; color: #FFFFFF;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="color: #FFFFFF; display: block; margin-bottom: 5px;">Check-out Date:</label>
+                    <input type="date" id="edit_check_out" required style="width: 100%; padding: 10px; background: #2a2a2a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; color: #FFFFFF;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="color: #FFFFFF; display: block; margin-bottom: 5px;">Number of Guests:</label>
+                    <input type="number" id="edit_num_guests" required min="1" style="width: 100%; padding: 10px; background: #2a2a2a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; color: #FFFFFF;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="color: #FFFFFF; display: block; margin-bottom: 5px;">Special Requests:</label>
+                    <textarea id="edit_special_requests" rows="3" style="width: 100%; padding: 10px; background: #2a2a2a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; color: #FFFFFF;"></textarea>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()" style="flex: 1;">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
     
@@ -360,7 +394,7 @@ $bookings = $wpdb->get_results($wpdb->prepare("
         });
         
         function updateStatus(bookingId, newStatus) {
-            if (!confirm('Are you sure you want to confirm this booking?')) return;
+            if (!confirm('Are you sure you want to change this booking status?')) return;
             
             jQuery.ajax({
                 url: '<?php echo admin_url('admin-ajax.php'); ?>',
@@ -384,6 +418,94 @@ $bookings = $wpdb->get_results($wpdb->prepare("
                 }
             });
         }
+        
+        function editBooking(bookingId) {
+            // Get booking details
+            jQuery.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'staydesk_get_booking',
+                    nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                    booking_id: bookingId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        const booking = response.data;
+                        document.getElementById('edit_booking_id').value = booking.id;
+                        document.getElementById('edit_check_in').value = booking.check_in_date;
+                        document.getElementById('edit_check_out').value = booking.check_out_date;
+                        document.getElementById('edit_num_guests').value = booking.num_guests;
+                        document.getElementById('edit_special_requests').value = booking.special_requests || '';
+                        document.getElementById('editBookingModal').style.display = 'flex';
+                    } else {
+                        alert('Error loading booking details');
+                    }
+                },
+                error: function() {
+                    alert('An error occurred');
+                }
+            });
+        }
+        
+        function closeEditModal() {
+            document.getElementById('editBookingModal').style.display = 'none';
+        }
+        
+        function deleteBooking(bookingId) {
+            if (!confirm('Are you sure you want to delete this booking? This action cannot be undone.')) return;
+            
+            jQuery.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'staydesk_delete_booking',
+                    nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                    booking_id: bookingId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Booking deleted successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error deleting booking');
+                    }
+                },
+                error: function() {
+                    alert('An error occurred');
+                }
+            });
+        }
+        
+        // Handle edit form submission
+        jQuery('#editBookingForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            jQuery.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'staydesk_edit_booking',
+                    nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                    booking_id: jQuery('#edit_booking_id').val(),
+                    check_in_date: jQuery('#edit_check_in').val(),
+                    check_out_date: jQuery('#edit_check_out').val(),
+                    num_guests: jQuery('#edit_num_guests').val(),
+                    special_requests: jQuery('#edit_special_requests').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Booking updated successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error updating booking');
+                    }
+                },
+                error: function() {
+                    alert('An error occurred');
+                }
+            });
+        });
     </script>
 </body>
 </html>

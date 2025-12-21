@@ -270,8 +270,8 @@ class Staydesk_Chatbot {
         <div id="dashboard-chatbot-widget" style="position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
             <style>
                 #dashboard-chatbot-widget .chat-toggle {
-                    width: 60px;
-                    height: 60px;
+                    width: 50px;
+                    height: 50px;
                     border-radius: 50%;
                     background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
                     border: none;
@@ -280,7 +280,7 @@ class Staydesk_Chatbot {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 28px;
+                    font-size: 24px;
                     transition: all 0.3s ease;
                 }
                 
@@ -410,7 +410,7 @@ class Staydesk_Chatbot {
             </style>
             
             <button class="chat-toggle" onclick="toggleDashboardChat()">
-                <span style="font-size: 28px; color: #0a0a0a;">👤</span>
+                <span style="font-size: 22px; color: #0a0a0a;">👤</span>
             </button>
             
             <div class="chat-window" id="dashboardChatWindow">

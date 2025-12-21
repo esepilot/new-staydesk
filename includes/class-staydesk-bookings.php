@@ -17,6 +17,9 @@ class Staydesk_Bookings {
         add_action('wp_ajax_staydesk_create_booking', array($this, 'create_booking'));
         add_action('wp_ajax_staydesk_update_booking_status', array($this, 'update_booking_status'));
         add_action('wp_ajax_staydesk_cancel_booking', array($this, 'cancel_booking'));
+        add_action('wp_ajax_staydesk_edit_booking', array($this, 'edit_booking'));
+        add_action('wp_ajax_staydesk_delete_booking', array($this, 'delete_booking'));
+        add_action('wp_ajax_staydesk_get_booking', array($this, 'get_booking'));
     }
 
     /**
@@ -181,6 +184,91 @@ class Staydesk_Bookings {
             "SELECT * FROM $table_bookings WHERE booking_reference = %s",
             $reference
         ));
+    }
+
+    /**
+     * Get booking details by ID (AJAX).
+     */
+    public function get_booking() {
+        check_ajax_referer('staydesk_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Access denied.'));
+        }
+
+        global $wpdb;
+        $booking_id = intval($_POST['booking_id']);
+
+        $table_bookings = $wpdb->prefix . 'staydesk_bookings';
+        $table_rooms = $wpdb->prefix . 'staydesk_rooms';
+        $table_guests = $wpdb->prefix . 'staydesk_guests';
+
+        $booking = $wpdb->get_row($wpdb->prepare("
+            SELECT b.*, r.room_name, g.guest_name, g.guest_email, g.guest_phone
+            FROM $table_bookings b
+            LEFT JOIN $table_rooms r ON b.room_id = r.id
+            LEFT JOIN $table_guests g ON b.guest_id = g.id
+            WHERE b.id = %d
+        ", $booking_id));
+
+        if (!$booking) {
+            wp_send_json_error(array('message' => 'Booking not found.'));
+        }
+
+        wp_send_json_success($booking);
+    }
+
+    /**
+     * Edit booking.
+     */
+    public function edit_booking() {
+        check_ajax_referer('staydesk_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Access denied.'));
+        }
+
+        global $wpdb;
+
+        $booking_id = intval($_POST['booking_id']);
+        $check_in = sanitize_text_field($_POST['check_in_date']);
+        $check_out = sanitize_text_field($_POST['check_out_date']);
+        $num_guests = intval($_POST['num_guests']);
+        $special_requests = sanitize_textarea_field($_POST['special_requests']);
+
+        // Update booking
+        $table_bookings = $wpdb->prefix . 'staydesk_bookings';
+        $wpdb->update(
+            $table_bookings,
+            array(
+                'check_in_date' => $check_in,
+                'check_out_date' => $check_out,
+                'num_guests' => $num_guests,
+                'special_requests' => $special_requests
+            ),
+            array('id' => $booking_id)
+        );
+
+        wp_send_json_success(array('message' => 'Booking updated successfully.'));
+    }
+
+    /**
+     * Delete booking.
+     */
+    public function delete_booking() {
+        check_ajax_referer('staydesk_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Access denied.'));
+        }
+
+        global $wpdb;
+        $booking_id = intval($_POST['booking_id']);
+
+        $table_bookings = $wpdb->prefix . 'staydesk_bookings';
+        $wpdb->delete($table_bookings, array('id' => $booking_id));
+
+        wp_send_json_success(array('message' => 'Booking deleted successfully.'));
     }
 }
 
