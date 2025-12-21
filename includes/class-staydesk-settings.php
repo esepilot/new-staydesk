@@ -62,6 +62,13 @@ class Staydesk_Settings {
      */
     public function register_settings() {
         // Paystack settings
+        register_setting('staydesk_settings', 'staydesk_paystack_test_mode');
+        register_setting('staydesk_settings', 'staydesk_paystack_test_public_key');
+        register_setting('staydesk_settings', 'staydesk_paystack_test_secret_key');
+        register_setting('staydesk_settings', 'staydesk_paystack_live_public_key');
+        register_setting('staydesk_settings', 'staydesk_paystack_live_secret_key');
+        
+        // Legacy keys (for backwards compatibility)
         register_setting('staydesk_settings', 'staydesk_paystack_secret_key');
         register_setting('staydesk_settings', 'staydesk_paystack_public_key');
         
@@ -80,6 +87,7 @@ class Staydesk_Settings {
      * Render settings page.
      */
     public function render_settings_page() {
+        $test_mode = get_option('staydesk_paystack_test_mode', 'yes');
         ?>
         <div class="wrap">
             <h1>StayDesk Settings</h1>
@@ -91,22 +99,66 @@ class Staydesk_Settings {
                     <tr>
                         <th colspan="2"><h2>Paystack Configuration</h2></th>
                     </tr>
+                    
                     <tr>
-                        <th scope="row">Paystack Secret Key</th>
+                        <th scope="row">Payment Mode</th>
                         <td>
-                            <input type="text" name="staydesk_paystack_secret_key" 
-                                   value="<?php echo esc_attr(get_option('staydesk_paystack_secret_key')); ?>" 
-                                   class="regular-text" />
-                            <p class="description">Your Paystack secret key for processing payments</p>
+                            <fieldset>
+                                <label>
+                                    <input type="radio" name="staydesk_paystack_test_mode" value="yes" <?php checked($test_mode, 'yes'); ?>>
+                                    Test Mode (for development & testing)
+                                </label>
+                                <br>
+                                <label>
+                                    <input type="radio" name="staydesk_paystack_test_mode" value="no" <?php checked($test_mode, 'no'); ?>>
+                                    Live Mode (for production payments)
+                                </label>
+                            </fieldset>
+                            <p class="description">Get your API keys from <a href="https://dashboard.paystack.com" target="_blank">Paystack Dashboard</a></p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th colspan="2"><h3 style="color: #0073aa;">Test Keys (for development)</h3></th>
+                    </tr>
+                    <tr>
+                        <th scope="row">Test Public Key</th>
+                        <td>
+                            <input type="text" name="staydesk_paystack_test_public_key" 
+                                   value="<?php echo esc_attr(get_option('staydesk_paystack_test_public_key')); ?>" 
+                                   class="regular-text" placeholder="pk_test_..." />
+                            <p class="description">Your Paystack test public key</p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Paystack Public Key</th>
+                        <th scope="row">Test Secret Key</th>
                         <td>
-                            <input type="text" name="staydesk_paystack_public_key" 
-                                   value="<?php echo esc_attr(get_option('staydesk_paystack_public_key')); ?>" 
-                                   class="regular-text" />
-                            <p class="description">Your Paystack public key</p>
+                            <input type="password" name="staydesk_paystack_test_secret_key" 
+                                   value="<?php echo esc_attr(get_option('staydesk_paystack_test_secret_key')); ?>" 
+                                   class="regular-text" placeholder="sk_test_..." />
+                            <p class="description">Your Paystack test secret key (will be hidden)</p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th colspan="2"><h3 style="color: #d63638;">Live Keys (for production)</h3></th>
+                    </tr>
+                    <tr>
+                        <th scope="row">Live Public Key</th>
+                        <td>
+                            <input type="text" name="staydesk_paystack_live_public_key" 
+                                   value="<?php echo esc_attr(get_option('staydesk_paystack_live_public_key')); ?>" 
+                                   class="regular-text" placeholder="pk_live_..." />
+                            <p class="description">Your Paystack live public key</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Live Secret Key</th>
+                        <td>
+                            <input type="password" name="staydesk_paystack_live_secret_key" 
+                                   value="<?php echo esc_attr(get_option('staydesk_paystack_live_secret_key')); ?>" 
+                                   class="regular-text" placeholder="sk_live_..." />
+                            <p class="description">Your Paystack live secret key (will be hidden)</p>
                         </td>
                     </tr>
                     
