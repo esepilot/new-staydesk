@@ -15,6 +15,7 @@ class Staydesk_Dashboard {
         add_shortcode('staydesk_homepage', array($this, 'render_homepage'));
         add_shortcode('staydesk_profile', array($this, 'render_profile'));
         add_shortcode('staydesk_bookings', array($this, 'render_bookings'));
+        add_shortcode('staydesk_hotel_info', array($this, 'render_hotel_info'));
         
         // AJAX handlers
         add_action('wp_ajax_staydesk_update_profile', array($this, 'update_profile'));
@@ -57,6 +58,19 @@ class Staydesk_Dashboard {
     public function render_bookings() {
         ob_start();
         include STAYDESK_PLUGIN_DIR . 'templates/bookings.php';
+        return ob_get_clean();
+    }
+    
+    /**
+     * Render hotel info page.
+     */
+    public function render_hotel_info() {
+        if (!is_user_logged_in()) {
+            return '<p>Please <a href="' . home_url('/staydesk-login') . '">login</a> to access this page.</p>';
+        }
+        
+        ob_start();
+        include STAYDESK_PLUGIN_DIR . 'templates/hotel-info.php';
         return ob_get_clean();
     }
     

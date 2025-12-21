@@ -409,11 +409,13 @@ class Staydesk_Chatbot {
                 }
             </style>
             
-            <button class="chat-toggle" onclick="toggleDashboardChat()">🤖</button>
+            <button class="chat-toggle" onclick="toggleDashboardChat()">
+                <span style="font-size: 28px; color: #0a0a0a;">👤</span>
+            </button>
             
             <div class="chat-window" id="dashboardChatWindow">
                 <div class="chat-header">
-                    <h3>🤖 Hotel Assistant</h3>
+                    <h3>👤 Hotel Assistant</h3>
                     <button class="chat-close" onclick="toggleDashboardChat()">×</button>
                 </div>
                 
