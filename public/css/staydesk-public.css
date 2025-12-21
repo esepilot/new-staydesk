@@ -1,0 +1,392 @@
+/* StayDesk Public Styles - Luxury Dark Theme */
+
+:root {
+    --primary-color: #D4AF37;
+    --primary-glow: rgba(212, 175, 55, 0.4);
+    --secondary-color: #FFD700;
+    --success-color: #28A745;
+    --warning-color: #FFC107;
+    --error-color: #DC3545;
+    --text-color: #E8E8E8;
+    --text-muted: #A0A0A0;
+    --bg-dark: #0a0a0a;
+    --bg-darker: #050505;
+    --bg-card: #1a1a1a;
+    --bg-card-hover: #2a2a2a;
+    --border-color: rgba(212, 175, 55, 0.2);
+    --shadow-gold: 0 10px 40px rgba(212, 175, 55, 0.3);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background: var(--bg-dark);
+}
+
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Loading Spinner */
+.staydesk-spinner {
+    border: 3px solid rgba(0, 102, 204, 0.1);
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+/* Buttons */
+.staydesk-btn {
+    padding: 14px 40px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-block;
+    text-decoration: none;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.staydesk-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.staydesk-btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.staydesk-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-gold);
+}
+
+.staydesk-btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: #000;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 20px var(--primary-glow);
+}
+
+.staydesk-btn-primary:hover {
+    box-shadow: 0 8px 35px var(--primary-glow);
+    transform: translateY(-3px) scale(1.02);
+}
+
+.staydesk-btn-secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.staydesk-btn-secondary:hover {
+    background: var(--primary-color);
+    color: #000;
+    border-color: var(--primary-color);
+}
+
+/* Cards */
+.staydesk-card {
+    background: var(--bg-card);
+    padding: 35px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-color);
+    position: relative;
+}
+
+.staydesk-card::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 16px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: -1;
+}
+
+.staydesk-card:hover::before {
+    opacity: 0.5;
+}
+
+.staydesk-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-gold);
+    background: var(--bg-card-hover);
+}
+
+/* Forms */
+.staydesk-form-group {
+    margin-bottom: 24px;
+}
+
+.staydesk-form-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--text-color);
+    letter-spacing: 0.3px;
+}
+
+.staydesk-form-control {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: var(--bg-card);
+    color: var(--text-color);
+}
+
+.staydesk-form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px var(--primary-glow);
+    background: var(--bg-card-hover);
+}
+
+.staydesk-form-control::placeholder {
+    color: var(--text-muted);
+}
+
+/* Toast Notifications */
+.staydesk-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 320px;
+    padding: 18px 24px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    z-index: 10000;
+    animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-color);
+}
+
+.staydesk-toast.success {
+    border-left: 4px solid var(--success-color);
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(40, 167, 69, 0.1) 100%);
+}
+
+.staydesk-toast.error {
+    border-left: 4px solid var(--error-color);
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(220, 53, 69, 0.1) 100%);
+}
+
+.staydesk-toast.warning {
+    border-left: 4px solid var(--warning-color);
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(255, 193, 7, 0.1) 100%);
+}
+
+/* Modal */
+.staydesk-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.staydesk-modal-content {
+    position: relative;
+    background: var(--bg-card);
+    margin: 10% auto;
+    padding: 45px;
+    max-width: 650px;
+    border-radius: 20px;
+    animation: fadeInUp 0.4s ease-out;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+.staydesk-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.3s ease;
+}
+
+.staydesk-modal-close:hover {
+    color: var(--error-color);
+    transform: rotate(90deg);
+}
+
+/* Responsive Grid */
+.staydesk-grid {
+    display: grid;
+    gap: 30px;
+}
+
+.staydesk-grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.staydesk-grid-3 {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.staydesk-grid-4 {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+/* Utility Classes */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+.mb-30 {
+    margin-bottom: 30px;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+.mt-30 {
+    margin-top: 30px;
+}
+
+/* Hover Effects */
+.hover-scale:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .staydesk-grid-2,
+    .staydesk-grid-3,
+    .staydesk-grid-4 {
+        grid-template-columns: 1fr;
+    }
+    
+    .staydesk-toast {
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+    }
+}
+
+/* Accessibility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Focus Styles */
+*:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+button:focus,
+a:focus {
+    outline-offset: 4px;
+}

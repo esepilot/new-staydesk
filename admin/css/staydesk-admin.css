@@ -1,0 +1,115 @@
+/* StayDesk Admin Styles */
+
+.staydesk-admin {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.staydesk-admin-header {
+    background: #0066CC;
+    color: white;
+    padding: 20px;
+    margin: -10px -20px 20px -20px;
+}
+
+.staydesk-admin-header h1 {
+    margin: 0;
+    color: white;
+}
+
+.staydesk-admin-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.staydesk-admin-tab {
+    padding: 12px 25px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.staydesk-admin-tab:hover {
+    color: #0066CC;
+}
+
+.staydesk-admin-tab.active {
+    color: #0066CC;
+    border-bottom-color: #0066CC;
+}
+
+.staydesk-admin-content {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.staydesk-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.staydesk-table th {
+    background: #f8f9fa;
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.staydesk-table td {
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.staydesk-table tr:hover {
+    background: #f8f9fa;
+}
+
+.staydesk-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.staydesk-badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.staydesk-badge-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.staydesk-badge-danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.staydesk-admin-stat {
+    background: linear-gradient(135deg, #0066CC 0%, #0052A3 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+
+.staydesk-admin-stat h3 {
+    margin: 0 0 10px 0;
+    font-size: 2.5rem;
+}
+
+.staydesk-admin-stat p {
+    margin: 0;
+    opacity: 0.9;
+}

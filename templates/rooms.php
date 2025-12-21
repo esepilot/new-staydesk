@@ -1,0 +1,702 @@
+<?php
+if (!is_user_logged_in()) {
+    wp_redirect(home_url('/staydesk-login'));
+    exit;
+}
+
+wp_enqueue_script('jquery');
+
+global $wpdb;
+$user_id = get_current_user_id();
+$table_hotels = $wpdb->prefix . 'staydesk_hotels';
+$hotel = $wpdb->get_row($wpdb->prepare(
+    "SELECT * FROM $table_hotels WHERE user_id = %d",
+    $user_id
+));
+
+if (!$hotel) {
+    echo '<p>Hotel profile not found.</p>';
+    return;
+}
+
+$table_rooms = $wpdb->prefix . 'staydesk_rooms';
+$rooms = $wpdb->get_results($wpdb->prepare(
+    "SELECT * FROM $table_rooms WHERE hotel_id = %d ORDER BY created_at DESC",
+    $hotel->id
+));
+
+$table_room_types = $wpdb->prefix . 'staydesk_room_types';
+$room_types = $wpdb->get_results($wpdb->prepare(
+    "SELECT * FROM $table_room_types WHERE hotel_id = %d OR hotel_id IS NULL ORDER BY type_name ASC",
+    $hotel->id
+));
+?>
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            padding: 25px;
+        }
+        
+        .rooms-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            padding: 25px;
+            border-radius: 18px;
+            margin-bottom: 30px;
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        
+        .page-header h1 {
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+            background: linear-gradient(90deg, #FFD700 0%, #4FC3F7 25%, #FFD700 50%, #64B5F6 75%, #FFD700 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            animation: sparkle 3s linear infinite;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: sparkle 3s linear infinite;
+            font-weight: 800;
+            font-size: 1.8rem;
+            text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            color: #000;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 35px rgba(212, 175, 55, 0.6);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #DC3545 0%, #C82333 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(220, 53, 69, 0.3);
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 35px rgba(220, 53, 69, 0.5);
+        }
+        
+        .btn-back {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            color: #E8E8E8;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            margin-right: 15px;
+        }
+        
+        .btn-back:hover {
+            border-color: rgba(212, 175, 55, 0.5);
+        }
+        
+        .form-section {
+            background: #1a1a1a;
+            padding: 35px;
+            border-radius: 18px;
+            margin-bottom: 35px;
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            display: none;
+        }
+        
+        .form-section.active {
+            display: block;
+        }
+        
+        .form-section h2 {
+            color: #D4AF37;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #E8E8E8;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 14px;
+            background: #2a2a2a;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 10px;
+            color: #E8E8E8;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #D4AF37;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+        
+        .rooms-table {
+            background: #1a1a1a;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+        }
+        
+        th {
+            padding: 18px;
+            text-align: left;
+            color: #D4AF37;
+            font-weight: 700;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+        }
+        
+        td {
+            padding: 18px;
+            color: #E8E8E8;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        }
+        
+        tr:hover {
+            background: #2a2a2a;
+        }
+        
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .status-available {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28A745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+        
+        .status-unavailable {
+            background: rgba(220, 53, 69, 0.2);
+            color: #DC3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .alert {
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .alert-success {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28A745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+        
+        .alert-error {
+            background: rgba(220, 53, 69, 0.2);
+            color: #DC3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #A0A0A0;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #E8E8E8;
+        }
+        
+        .room-types-section {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        
+        .room-types-section h3 {
+            color: #D4AF37;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .room-types-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .room-type-badge {
+            background: #2a2a2a;
+            color: #E8E8E8;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        
+        .room-type-badge .delete-type {
+            color: #DC3545;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .room-type-badge .delete-type:hover {
+            color: #FF4444;
+        }
+        
+        .add-type-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .add-type-form input {
+            flex: 1;
+            max-width: 300px;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 10px;
+            color: #E8E8E8;
+        }
+        
+        .edit-row {
+            background: #2a2a2a;
+        }
+        
+        .edit-row td {
+            padding: 15px !important;
+        }
+        
+        .edit-form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .edit-form-grid input,
+        .edit-form-grid select,
+        .edit-form-grid textarea {
+            padding: 10px;
+            background: #1a1a1a;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 8px;
+            color: #E8E8E8;
+            font-size: 0.9rem;
+        }
+        
+        .edit-form-grid textarea {
+            grid-column: span 3;
+        }
+        
+        .room-type-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 15px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(255, 215, 0, 0.1));
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            color: #D4AF37;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+    </style>
+    
+    <div class="rooms-container">
+        <div class="page-header">
+            <h1>Room Management</h1>
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+            <div>
+                <button class="btn btn-back" onclick="window.location.href='<?php echo home_url('/staydesk-dashboard'); ?>'">← Back to Dashboard</button>
+                <button class="btn btn-primary" onclick="toggleForm()">+ Add New Room</button>
+            </div>
+        </div>
+        
+        <div id="alertBox" class="alert"></div>
+        
+        <!-- Room Types Management Section -->
+        <div class="form-section" style="margin-bottom: 30px;">
+            <h2>Manage Room Types</h2>
+            <div style="display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px;">
+                <div class="form-group" style="flex: 1; margin: 0;">
+                    <label>Add New Room Type</label>
+                    <input type="text" id="newRoomType" placeholder="e.g., Executive Suite, Penthouse">
+                </div>
+                <button type="button" class="btn btn-primary" onclick="addRoomType()">+ Add Type</button>
+            </div>
+            <div id="roomTypesList" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <?php foreach ($room_types as $type): ?>
+                    <span class="room-type-tag" data-id="<?php echo $type->id; ?>">
+                        <?php echo esc_html($type->type_name); ?>
+                        <?php if ($type->hotel_id): ?>
+                            <button onclick="deleteRoomType(<?php echo $type->id; ?>)" style="background: none; border: none; color: #ff4444; cursor: pointer; margin-left: 8px;">×</button>
+                        <?php endif; ?>
+                    </span>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        
+        <div id="roomForm" class="form-section">
+            <h2>Add New Room</h2>
+            <form id="addRoomForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Room Name *</label>
+                        <input type="text" name="room_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Room Type *</label>
+                        <select name="room_type" id="roomTypeSelect" required>
+                            <option value="">Select Type</option>
+                            <?php foreach ($room_types as $type): ?>
+                                <option value="<?php echo esc_attr($type->type_name); ?>"><?php echo esc_html($type->type_name); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Price per Night (₦) *</label>
+                        <input type="number" name="price_per_night" required min="0" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Max Guests *</label>
+                        <input type="number" name="max_guests" required min="1" max="10">
+                    </div>
+                    <div class="form-group">
+                        <label>Bed Type</label>
+                        <select name="bed_type">
+                            <option value="Single">Single Bed</option>
+                            <option value="Double">Double Bed</option>
+                            <option value="Queen">Queen Bed</option>
+                            <option value="King">King Bed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Size (sq ft)</label>
+                        <input type="number" name="room_size" min="0">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" rows="4"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Amenities (comma separated)</label>
+                    <input type="text" name="amenities" placeholder="WiFi, TV, Air Conditioning, Mini Bar">
+                </div>
+                
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="availability_status">
+                        <option value="available">Available</option>
+                        <option value="unavailable">Unavailable</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-top: 25px;">
+                    <button type="submit" class="btn btn-primary">Save Room</button>
+                    <button type="button" class="btn btn-back" onclick="toggleForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="rooms-table">
+            <?php if (empty($rooms)): ?>
+                <div class="empty-state">
+                    <h3>No Rooms Yet</h3>
+                    <p>Click "Add New Room" to get started</p>
+                </div>
+            <?php else: ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Room Name</th>
+                            <th>Type</th>
+                            <th>Price/Night</th>
+                            <th>Max Guests</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($rooms as $room): ?>
+                            <tr>
+                                <td><strong><?php echo esc_html($room->room_name); ?></strong></td>
+                                <td><?php echo esc_html($room->room_type); ?></td>
+                                <td>₦<?php echo number_format($room->price_per_night, 0); ?></td>
+                                <td><?php echo esc_html($room->max_guests); ?></td>
+                                <td>
+                                    <span class="status-badge status-<?php echo $room->availability_status; ?>">
+                                        <?php echo ucfirst($room->availability_status); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-primary btn-sm" onclick="toggleStatus(<?php echo $room->id; ?>, '<?php echo $room->availability_status; ?>')">
+                                            <?php echo $room->availability_status === 'available' ? 'Disable' : 'Enable'; ?>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteRoom(<?php echo $room->id; ?>)">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+    </div>
+    
+    <script>
+        function toggleForm() {
+            const form = document.getElementById('roomForm');
+            form.classList.toggle('active');
+            if (form.classList.contains('active')) {
+                document.getElementById('addRoomForm').reset();
+            }
+        }
+        
+        function showAlert(message, type) {
+            const alert = document.getElementById('alertBox');
+            alert.className = 'alert alert-' + type + ' show';
+            alert.textContent = message;
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 5000);
+        }
+        
+        jQuery(document).ready(function($) {
+            $('#addRoomForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                $.ajax({
+                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                    type: 'POST',
+                    data: {
+                        action: 'staydesk_add_room',
+                        nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                        hotel_id: <?php echo $hotel->id; ?>,
+                        ...Object.fromEntries(new FormData(this))
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            showAlert('Room added successfully!', 'success');
+                            setTimeout(() => location.reload(), 2000);
+                        } else {
+                            showAlert(response.data.message || 'Error adding room', 'error');
+                        }
+                    },
+                    error: function() {
+                        showAlert('An error occurred. Please try again.', 'error');
+                    }
+                });
+            });
+        });
+        
+        function toggleStatus(roomId, currentStatus) {
+            const newStatus = currentStatus === 'available' ? 'unavailable' : 'available';
+            
+            jQuery.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'staydesk_update_room_status',
+                    nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                    room_id: roomId,
+                    status: newStatus
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('Room status updated!', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert('Error updating status', 'error');
+                    }
+                }
+            });
+        }
+        
+        function deleteRoom(roomId) {
+            if (!confirm('Are you sure you want to delete this room?')) return;
+            
+            jQuery.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'staydesk_delete_room',
+                    nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                    room_id: roomId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('Room deleted successfully!', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert('Error deleting room', 'error');
+                    }
+                }
+            });
+        }
+        
+        function addRoomType() {
+            const typeName = document.getElementById('newRoomType').value.trim();
+            if (!typeName) {
+                showAlert('Please enter a room type name', 'error');
+                return;
+            }
+            
+            jQuery.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'staydesk_add_room_type',
+                    nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                    hotel_id: <?php echo $hotel->id; ?>,
+                    type_name: typeName
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('Room type added successfully!', 'success');
+                        document.getElementById('newRoomType').value = '';
+                        
+                        // Add to list without reload
+                        const tag = document.createElement('span');
+                        tag.className = 'room-type-tag';
+                        tag.setAttribute('data-id', response.data.type_id);
+                        tag.innerHTML = typeName + '<button onclick="deleteRoomType(' + response.data.type_id + ')" style="background: none; border: none; color: #ff4444; cursor: pointer; margin-left: 8px;">×</button>';
+                        document.getElementById('roomTypesList').appendChild(tag);
+                        
+                        // Add to dropdown
+                        const option = document.createElement('option');
+                        option.value = typeName;
+                        option.textContent = typeName;
+                        document.getElementById('roomTypeSelect').appendChild(option);
+                    } else {
+                        showAlert(response.data.message || 'Error adding room type', 'error');
+                    }
+                }
+            });
+        }
+        
+        function deleteRoomType(typeId) {
+            if (!confirm('Are you sure you want to delete this room type?')) return;
+            
+            jQuery.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'staydesk_delete_room_type',
+                    nonce: '<?php echo wp_create_nonce('staydesk_nonce'); ?>',
+                    type_id: typeId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('Room type deleted successfully!', 'success');
+                        
+                        // Remove from list without reload
+                        const tag = document.querySelector('.room-type-tag[data-id="' + typeId + '"]');
+                        if (tag) tag.remove();
+                        
+                        // Remove from dropdown
+                        const options = document.getElementById('roomTypeSelect').options;
+                        for (let i = 0; i < options.length; i++) {
+                            if (options[i].value === response.data.type_name) {
+                                options[i].remove();
+                                break;
+                            }
+                        }
+                    } else {
+                        showAlert('Error deleting room type', 'error');
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
