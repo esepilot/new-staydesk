@@ -5,11 +5,7 @@
  * Pre-filled with Nigerian hotel-specific FAQs
  */
 
-if (!is_user_logged_in()) {
-    wp_redirect(home_url('/staydesk-login'));
-    exit;
-}
-
+// Note: Login check is handled by the shortcode handler
 global $wpdb;
 $user_id = get_current_user_id();
 $table_hotels = $wpdb->prefix . 'staydesk_hotels';
@@ -19,7 +15,10 @@ $hotel = $wpdb->get_row($wpdb->prepare(
 ));
 
 if (!$hotel) {
-    echo '<p>Hotel profile not found.</p>';
+    echo '<div style="padding: 40px; text-align: center; color: #FFD700; background: #1a1a1a; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3);">';
+    echo '<h2 style="color: #FFD700;">Hotel Profile Not Found</h2>';
+    echo '<p style="color: #B8B8B8;">Please complete your profile setup on the <a href="' . home_url('/staydesk-profile') . '" style="color: #D4AF37;">Profile page</a> first.</p>';
+    echo '</div>';
     return;
 }
 
