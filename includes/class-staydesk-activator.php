@@ -139,6 +139,18 @@ class Staydesk_Activator {
             KEY session_id (session_id)
         ) $charset_collate;";
 
+        // Chat sessions table (for booking flow state management)
+        $table_chat_sessions = $wpdb->prefix . 'staydesk_chat_sessions';
+        $sql_chat_sessions = "CREATE TABLE $table_chat_sessions (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            session_id varchar(100) NOT NULL,
+            booking_data longtext DEFAULT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY session_id (session_id)
+        ) $charset_collate;";
+
         // Subscriptions table
         $table_subscriptions = $wpdb->prefix . 'staydesk_subscriptions';
         $sql_subscriptions = "CREATE TABLE $table_subscriptions (
@@ -220,6 +232,7 @@ class Staydesk_Activator {
         dbDelta($sql_guests);
         dbDelta($sql_transactions);
         dbDelta($sql_chat_logs);
+        dbDelta($sql_chat_sessions);
         dbDelta($sql_subscriptions);
         dbDelta($sql_support);
         dbDelta($sql_room_types);

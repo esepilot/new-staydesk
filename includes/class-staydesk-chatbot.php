@@ -90,6 +90,9 @@ class Staydesk_Chatbot {
 
         $message_lower = strtolower($message);
 
+        // Get conversation context from recent messages
+        $context = $this->get_conversation_context($session_id);
+        
         // Get hotel data including FAQs
         $hotel = null;
         $faq_data = null;
@@ -381,6 +384,11 @@ class Staydesk_Chatbot {
             }
         }
 
+        // SUPER INTELLIGENT BOOKING FLOW with account details collection
+        if (preg_match('/(book|make reservation|want to book|i want|reserve)/i', $message_lower)) {
+            return $this->handle_booking_flow($hotel_id, $message, $session_id, $language, $context);
+        }
+
         // Check for payment query
         if (preg_match('/(payment|pay|account|transfer)/i', $message_lower)) {
             if ($hotel && $hotel->account_details) {
@@ -406,6 +414,416 @@ class Staydesk_Chatbot {
             'fallback_whatsapp' => true,
             'whatsapp_link' => 'https://wa.me/2347120018023?text=' . urlencode($message)
         );
+    }
+
+    /**
+     * Super Intelligent Booking Flow Handler
+     * Guides users through complete booking process with account detail collection
+     */
+    private function handle_booking_flow($hotel_id, $message, $session_id, $language, $context) {
+        global $wpdb;
+        
+        // Get current booking state from session
+        $booking_state = $this->get_booking_state($session_id);
+        
+        // STEP 1: Show available rooms if not already selected
+        if (!isset($booking_state['room_selected'])) {
+            $table_rooms = $wpdb->prefix . 'staydesk_rooms';
+            $rooms = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM $table_rooms WHERE hotel_id = %d AND availability_status = 'available'",
+                $hotel_id
+            ));
+            
+            if (empty($rooms)) {
+                return array(
+                    'message' => $this->translate("Sorry, no rooms are currently available. Can I help you with something else?", $language),
+                    'type' => 'no_rooms_available'
+                );
+            }
+            
+            $response = $this->translate("Great! I'll help you book a room. Here are our available rooms", $language) . ":\n\n";
+            foreach ($rooms as $index => $room) {
+                $response .= ($index + 1) . ". " . $room->room_name . " - ₦" . number_format($room->price_per_night) . "/night\n";
+                $response .= "   Type: " . $room->room_type . ", Sleeps: " . $room->capacity . " guests\n\n";
+            }
+            $response .= $this->translate("Which room would you like? (Reply with the number)", $language);
+            
+            // Save state
+            $this->update_booking_state($session_id, array('step' => 'room_selection', 'rooms' => $rooms));
+            
+            return array(
+                'message' => $response,
+                'type' => 'booking_room_selection',
+                'rooms' => $rooms,
+                'next_step' => 'room_selection'
+            );
+        }
+        
+        // STEP 2: Collect room selection
+        if ($booking_state['step'] === 'room_selection' && !isset($booking_state['selected_room_id'])) {
+            $room_number = intval($message);
+            if ($room_number > 0 && $room_number <= count($booking_state['rooms'])) {
+                $selected_room = $booking_state['rooms'][$room_number - 1];
+                
+                $this->update_booking_state($session_id, array(
+                    'selected_room_id' => $selected_room->id,
+                    'selected_room_name' => $selected_room->room_name,
+                    'selected_room_price' => $selected_room->price_per_night,
+                    'step' => 'check_in_date'
+                ));
+                
+                return array(
+                    'message' => $this->translate("Perfect! You've selected {$selected_room->room_name}.\n\nWhat's your check-in date? (Format: DD-MM-YYYY or YYYY-MM-DD)", $language),
+                    'type' => 'booking_check_in_date',
+                    'next_step' => 'check_in_date'
+                );
+            } else {
+                return array(
+                    'message' => $this->translate("Please enter a valid room number from the list above.", $language),
+                    'type' => 'invalid_room_selection'
+                );
+            }
+        }
+        
+        // STEP 3: Collect check-in date
+        if ($booking_state['step'] === 'check_in_date' && !isset($booking_state['check_in_date'])) {
+            $date = $this->parse_date($message);
+            if ($date) {
+                $this->update_booking_state($session_id, array(
+                    'check_in_date' => $date,
+                    'step' => 'check_out_date'
+                ));
+                
+                return array(
+                    'message' => $this->translate("Check-in date set to: {$date}\n\nWhat's your check-out date? (Format: DD-MM-YYYY or YYYY-MM-DD)", $language),
+                    'type' => 'booking_check_out_date',
+                    'next_step' => 'check_out_date'
+                );
+            } else {
+                return array(
+                    'message' => $this->translate("Invalid date format. Please use DD-MM-YYYY or YYYY-MM-DD format (e.g., 25-12-2025)", $language),
+                    'type' => 'invalid_date'
+                );
+            }
+        }
+        
+        // STEP 4: Collect check-out date
+        if ($booking_state['step'] === 'check_out_date' && !isset($booking_state['check_out_date'])) {
+            $date = $this->parse_date($message);
+            if ($date) {
+                // Validate check-out is after check-in
+                if (strtotime($date) <= strtotime($booking_state['check_in_date'])) {
+                    return array(
+                        'message' => $this->translate("Check-out date must be after check-in date. Please enter a valid check-out date.", $language),
+                        'type' => 'invalid_checkout_date'
+                    );
+                }
+                
+                // Calculate number of nights
+                $nights = (strtotime($date) - strtotime($booking_state['check_in_date'])) / 86400;
+                $total_price = $nights * $booking_state['selected_room_price'];
+                
+                $this->update_booking_state($session_id, array(
+                    'check_out_date' => $date,
+                    'nights' => $nights,
+                    'total_price' => $total_price,
+                    'step' => 'guest_name'
+                ));
+                
+                return array(
+                    'message' => $this->translate("Check-out date set to: {$date}\n\nTotal: {$nights} nights × ₦" . number_format($booking_state['selected_room_price']) . " = ₦" . number_format($total_price) . "\n\nGreat! Now I need your personal details.\n\nWhat's your full name?", $language),
+                    'type' => 'booking_guest_name',
+                    'next_step' => 'guest_name',
+                    'booking_summary' => array(
+                        'room' => $booking_state['selected_room_name'],
+                        'check_in' => $booking_state['check_in_date'],
+                        'check_out' => $date,
+                        'nights' => $nights,
+                        'total' => $total_price
+                    )
+                );
+            } else {
+                return array(
+                    'message' => $this->translate("Invalid date format. Please use DD-MM-YYYY or YYYY-MM-DD format.", $language),
+                    'type' => 'invalid_date'
+                );
+            }
+        }
+        
+        // STEP 5: Collect guest name
+        if ($booking_state['step'] === 'guest_name' && !isset($booking_state['guest_name'])) {
+            $this->update_booking_state($session_id, array(
+                'guest_name' => $message,
+                'step' => 'guest_email'
+            ));
+            
+            return array(
+                'message' => $this->translate("Thank you, {$message}!\n\nWhat's your email address?", $language),
+                'type' => 'booking_guest_email',
+                'next_step' => 'guest_email'
+            );
+        }
+        
+        // STEP 6: Collect email
+        if ($booking_state['step'] === 'guest_email' && !isset($booking_state['guest_email'])) {
+            if (!filter_var($message, FILTER_VALIDATE_EMAIL)) {
+                return array(
+                    'message' => $this->translate("Please enter a valid email address (e.g., example@email.com)", $language),
+                    'type' => 'invalid_email'
+                );
+            }
+            
+            $this->update_booking_state($session_id, array(
+                'guest_email' => $message,
+                'step' => 'guest_phone'
+            ));
+            
+            return array(
+                'message' => $this->translate("Email saved: {$message}\n\nWhat's your phone number? (Include country code, e.g., +234...)", $language),
+                'type' => 'booking_guest_phone',
+                'next_step' => 'guest_phone'
+            );
+        }
+        
+        // STEP 7: Collect phone number
+        if ($booking_state['step'] === 'guest_phone' && !isset($booking_state['guest_phone'])) {
+            $this->update_booking_state($session_id, array(
+                'guest_phone' => $message,
+                'step' => 'number_of_guests'
+            ));
+            
+            return array(
+                'message' => $this->translate("Phone saved: {$message}\n\nHow many guests will be staying? (Maximum: " . $booking_state['selected_room_capacity'] . " for this room)", $language),
+                'type' => 'booking_guests_count',
+                'next_step' => 'number_of_guests'
+            );
+        }
+        
+        // STEP 8: Number of guests
+        if ($booking_state['step'] === 'number_of_guests' && !isset($booking_state['number_of_guests'])) {
+            $guests = intval($message);
+            if ($guests < 1) {
+                return array(
+                    'message' => $this->translate("Please enter a valid number of guests (at least 1).", $language),
+                    'type' => 'invalid_guests'
+                );
+            }
+            
+            $this->update_booking_state($session_id, array(
+                'number_of_guests' => $guests,
+                'step' => 'special_requests'
+            ));
+            
+            return array(
+                'message' => $this->translate("Number of guests: {$guests}\n\nDo you have any special requests? (e.g., early check-in, airport pickup, dietary requirements)\n\nType your requests or type 'none' to skip.", $language),
+                'type' => 'booking_special_requests',
+                'next_step' => 'special_requests'
+            );
+        }
+        
+        // STEP 9: Special requests
+        if ($booking_state['step'] === 'special_requests' && !isset($booking_state['special_requests'])) {
+            $requests = ($message === 'none' || strtolower($message) === 'none') ? '' : $message;
+            
+            $this->update_booking_state($session_id, array(
+                'special_requests' => $requests,
+                'step' => 'confirm_booking'
+            ));
+            
+            // Generate booking summary
+            $summary = $this->translate("Perfect! Here's your booking summary", $language) . ":\n\n";
+            $summary .= "━━━━━━━━━━━━━━━━━━━━━━\n";
+            $summary .= "🏨 Room: " . $booking_state['selected_room_name'] . "\n";
+            $summary .= "📅 Check-in: " . $booking_state['check_in_date'] . "\n";
+            $summary .= "📅 Check-out: " . $booking_state['check_out_date'] . "\n";
+            $summary .= "🌙 Nights: " . $booking_state['nights'] . "\n";
+            $summary .= "👤 Guest: " . $booking_state['guest_name'] . "\n";
+            $summary .= "📧 Email: " . $booking_state['guest_email'] . "\n";
+            $summary .= "📱 Phone: " . $booking_state['guest_phone'] . "\n";
+            $summary .= "👥 Guests: " . $booking_state['number_of_guests'] . "\n";
+            if (!empty($requests)) {
+                $summary .= "📝 Requests: " . $requests . "\n";
+            }
+            $summary .= "━━━━━━━━━━━━━━━━━━━━━━\n";
+            $summary .= "💰 Total Amount: ₦" . number_format($booking_state['total_price']) . "\n\n";
+            $summary .= $this->translate("Type 'CONFIRM' to proceed with booking, or 'CANCEL' to start over.", $language);
+            
+            return array(
+                'message' => $summary,
+                'type' => 'booking_confirmation',
+                'next_step' => 'confirm_booking',
+                'booking_data' => $booking_state
+            );
+        }
+        
+        // STEP 10: Confirm and create booking
+        if ($booking_state['step'] === 'confirm_booking') {
+            if (preg_match('/confirm/i', $message)) {
+                // Create booking reference
+                $reference = 'BK' . strtoupper(substr(md5(uniqid()), 0, 8));
+                
+                // Save booking to database
+                $table_bookings = $wpdb->prefix . 'staydesk_bookings';
+                $booking_id = $wpdb->insert($table_bookings, array(
+                    'hotel_id' => $hotel_id,
+                    'room_id' => $booking_state['selected_room_id'],
+                    'guest_name' => $booking_state['guest_name'],
+                    'guest_email' => $booking_state['guest_email'],
+                    'guest_phone' => $booking_state['guest_phone'],
+                    'check_in_date' => $booking_state['check_in_date'],
+                    'check_out_date' => $booking_state['check_out_date'],
+                    'number_of_guests' => $booking_state['number_of_guests'],
+                    'special_requests' => $booking_state['special_requests'],
+                    'total_price' => $booking_state['total_price'],
+                    'booking_reference' => $reference,
+                    'booking_status' => 'pending',
+                    'payment_status' => 'pending',
+                    'created_at' => current_time('mysql')
+                ));
+                
+                if ($booking_id) {
+                    // Clear booking state
+                    $this->clear_booking_state($session_id);
+                    
+                    // Get hotel account details for payment
+                    $table_hotels = $wpdb->prefix . 'staydesk_hotels';
+                    $hotel = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_hotels WHERE id = %d", $hotel_id));
+                    
+                    $payment_info = "";
+                    if ($hotel && $hotel->account_details) {
+                        $account = json_decode($hotel->account_details, true);
+                        $payment_info = "\n\n💳 Payment Instructions:\n";
+                        $payment_info .= "━━━━━━━━━━━━━━━━━━━━━━\n";
+                        if (isset($account['bank_name'])) $payment_info .= "Bank: " . $account['bank_name'] . "\n";
+                        if (isset($account['account_number'])) $payment_info .= "Account: " . $account['account_number'] . "\n";
+                        if (isset($account['account_name'])) $payment_info .= "Name: " . $account['account_name'] . "\n";
+                        $payment_info .= "Amount: ₦" . number_format($booking_state['total_price']) . "\n";
+                        $payment_info .= "Reference: " . $reference . "\n";
+                        $payment_info .= "━━━━━━━━━━━━━━━━━━━━━━\n\n";
+                        $payment_info .= $this->translate("After payment, send proof to confirm your booking.", $language);
+                    }
+                    
+                    $response = "✅ " . $this->translate("Booking Confirmed!", $language) . "\n\n";
+                    $response .= $this->translate("Your booking reference is", $language) . ": " . $reference . "\n\n";
+                    $response .= $this->translate("A confirmation email has been sent to", $language) . " " . $booking_state['guest_email'] . "\n";
+                    $response .= $payment_info;
+                    $response .= "\n" . $this->translate("We look forward to hosting you!", $language);
+                    
+                    return array(
+                        'message' => $response,
+                        'type' => 'booking_created',
+                        'booking_reference' => $reference,
+                        'booking_id' => $booking_id
+                    );
+                } else {
+                    return array(
+                        'message' => $this->translate("Sorry, there was an error creating your booking. Please try again or contact support.", $language),
+                        'type' => 'booking_error'
+                    );
+                }
+            } elseif (preg_match('/cancel/i', $message)) {
+                $this->clear_booking_state($session_id);
+                return array(
+                    'message' => $this->translate("Booking cancelled. How else can I help you?", $language),
+                    'type' => 'booking_cancelled'
+                );
+            } else {
+                return array(
+                    'message' => $this->translate("Please type 'CONFIRM' to proceed with booking, or 'CANCEL' to start over.", $language),
+                    'type' => 'invalid_confirmation'
+                );
+            }
+        }
+        
+        // Fallback
+        return array(
+            'message' => $this->translate("I'm here to help you book a room. Let's start! What dates are you looking for?", $language),
+            'type' => 'booking_start'
+        );
+    }
+    
+    /**
+     * Get conversation context from recent messages
+     */
+    private function get_conversation_context($session_id) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'staydesk_chat_logs';
+        
+        $history = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table WHERE session_id = %s ORDER BY created_at DESC LIMIT 5",
+            $session_id
+        ));
+        
+        return $history ?: array();
+    }
+    
+    /**
+     * Get booking state from session storage
+     */
+    private function get_booking_state($session_id) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'staydesk_chat_sessions';
+        
+        $session = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE session_id = %s",
+            $session_id
+        ));
+        
+        if ($session && $session->booking_data) {
+            return json_decode($session->booking_data, true) ?: array();
+        }
+        
+        return array();
+    }
+    
+    /**
+     * Update booking state in session storage
+     */
+    private function update_booking_state($session_id, $data) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'staydesk_chat_sessions';
+        
+        $current_state = $this->get_booking_state($session_id);
+        $updated_state = array_merge($current_state, $data);
+        
+        $wpdb->replace($table, array(
+            'session_id' => $session_id,
+            'booking_data' => json_encode($updated_state),
+            'updated_at' => current_time('mysql')
+        ));
+    }
+    
+    /**
+     * Clear booking state
+     */
+    private function clear_booking_state($session_id) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'staydesk_chat_sessions';
+        
+        $wpdb->delete($table, array('session_id' => $session_id));
+    }
+    
+    /**
+     * Parse date from various formats
+     */
+    private function parse_date($input) {
+        // Try different date formats
+        $formats = array('d-m-Y', 'Y-m-d', 'd/m/Y', 'Y/m/d', 'm-d-Y');
+        
+        foreach ($formats as $format) {
+            $date = DateTime::createFromFormat($format, trim($input));
+            if ($date) {
+                return $date->format('Y-m-d');
+            }
+        }
+        
+        // Try strtotime as fallback
+        $timestamp = strtotime($input);
+        if ($timestamp !== false) {
+            return date('Y-m-d', $timestamp);
+        }
+        
+        return false;
     }
 
     /**
