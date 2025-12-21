@@ -186,6 +186,32 @@ class Staydesk_Activator {
             KEY hotel_id (hotel_id)
         ) $charset_collate;";
 
+        // Roles table
+        $table_roles = $wpdb->prefix . 'staydesk_roles';
+        $sql_roles = "CREATE TABLE $table_roles (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id bigint(20) UNSIGNED NOT NULL,
+            role_name varchar(50) NOT NULL,
+            hotel_id bigint(20) UNSIGNED DEFAULT NULL,
+            capabilities longtext DEFAULT NULL,
+            assigned_by bigint(20) UNSIGNED DEFAULT NULL,
+            assigned_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY user_id (user_id),
+            KEY hotel_id (hotel_id)
+        ) $charset_collate;";
+
+        // Settings table
+        $table_settings = $wpdb->prefix . 'staydesk_settings';
+        $sql_settings = "CREATE TABLE $table_settings (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            setting_key varchar(100) NOT NULL,
+            setting_value longtext DEFAULT NULL,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY setting_key (setting_key)
+        ) $charset_collate;";
+
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         
         dbDelta($sql_hotels);
@@ -197,6 +223,8 @@ class Staydesk_Activator {
         dbDelta($sql_subscriptions);
         dbDelta($sql_support);
         dbDelta($sql_room_types);
+        dbDelta($sql_roles);
+        dbDelta($sql_settings);
         
         // Insert default room types (hotel_id = NULL means available to all)
         $default_types = array('Single', 'Double', 'Suite', 'Deluxe', 'Presidential');
