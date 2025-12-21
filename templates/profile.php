@@ -20,10 +20,28 @@ if (!$hotel) {
 }
 
 $table_subscriptions = $wpdb->prefix . 'staydesk_subscriptions';
+// Enhanced query to get subscription data with better fallback
 $subscription = $wpdb->get_row($wpdb->prepare(
-    "SELECT * FROM $table_subscriptions WHERE hotel_id = %d AND status = 'active' ORDER BY expiry_date DESC LIMIT 1",
+    "SELECT * FROM $table_subscriptions 
+     WHERE hotel_id = %d AND (status = 'active' OR status = 'pending')
+     ORDER BY created_at DESC LIMIT 1",
     $hotel->id
 ));
+
+// CRITICAL FIX: If no subscription record but hotel shows active, create display data from hotel record
+if (!$subscription && $hotel->subscription_status === 'active' && $hotel->subscription_expiry) {
+    $subscription = (object) array(
+        'id' => 0,
+        'hotel_id' => $hotel->id,
+        'plan_type' => $hotel->subscription_plan ?: 'monthly',
+        'status' => 'active',
+        'expiry_date' => $hotel->subscription_expiry,
+        'plan_price' => ($hotel->subscription_plan === 'yearly') ? 598800 : 49900,
+        'auto_renew' => 1,
+        'start_date' => date('Y-m-d H:i:s', strtotime('-30 days')),
+        'created_at' => date('Y-m-d H:i:s')
+    );
+}
 ?>
 <!DOCTYPE html>
 <html>

@@ -266,8 +266,14 @@ class Staydesk_Chatbot {
             }
         }
 
+        // ENHANCED: Translate Pidgin to English first for better understanding
+        $original_message = $message_lower;
+        if ($language === 'pidgin' || preg_match('/(wetin|una|dey|abeg|fit|make|wan)/i', $message_lower)) {
+            $message_lower = $this->translate_pidgin_to_english($message_lower);
+        }
+
         // Check for greeting
-        if (preg_match('/(hello|hi|hey|good morning|good afternoon|good evening|wetin dey|wetin sup)/i', $message_lower)) {
+        if (preg_match('/(hello|hi|hey|good morning|good afternoon|good evening|wetin dey|wetin sup)/i', $original_message)) {
             return array(
                 'message' => $this->translate("Hello! Welcome to " . ($hotel ? $hotel->hotel_name : "StayDesk") . ". How can I help you today?", $language),
                 'type' => 'greeting',
@@ -281,10 +287,14 @@ class Staydesk_Chatbot {
             );
         }
 
-        // Check for room availability query
-        if (preg_match('/(room|available|vacancy|free|book)/i', $message_lower)) {
+        // ENHANCED: Room availability query with detailed information
+        if (preg_match('/(room|available|vacancy|free|book|reserve)/i', $message_lower)) {
             if ($hotel_id > 0) {
-                $rooms = Staydesk_Rooms::get_hotel_rooms($hotel_id);
+                $table_rooms = $wpdb->prefix . 'staydesk_rooms';
+                $rooms = $wpdb->get_results($wpdb->prepare(
+                    "SELECT * FROM $table_rooms WHERE hotel_id = %d AND availability_status = 'available'",
+                    $hotel_id
+                ));
                 
                 if (empty($rooms)) {
                     return array(
@@ -293,23 +303,21 @@ class Staydesk_Chatbot {
                     );
                 }
 
-                $room_list = array();
+                $response = $this->translate("We have " . count($rooms) . " rooms available", $language) . ":\n\n";
                 foreach ($rooms as $room) {
-                    if ($room->availability_status === 'available') {
-                        $room_list[] = array(
-                            'id' => $room->id,
-                            'name' => $room->room_name,
-                            'type' => $room->room_type,
-                            'price' => $room->price_per_night,
-                            'description' => $room->room_description
-                        );
+                    $response .= "• " . $room->room_name . " - ₦" . number_format($room->price_per_night) . "/night\n";
+                    $response .= "  Type: " . $room->room_type . ", Capacity: " . $room->capacity . " guests\n";
+                    if (!empty($room->room_description)) {
+                        $response .= "  " . substr($room->room_description, 0, 100) . "...\n";
                     }
+                    $response .= "\n";
                 }
+                $response .= $this->translate("Which room would you like to book?", $language);
 
                 return array(
-                    'message' => $this->translate("We have " . count($room_list) . " rooms available. Here are your options:", $language),
+                    'message' => $response,
                     'type' => 'room_list',
-                    'rooms' => $room_list
+                    'rooms' => $rooms
                 );
             } else {
                 return array(
@@ -440,14 +448,55 @@ class Staydesk_Chatbot {
     }
 
     /**
+     * Translate Pidgin to English for better processing.
+     */
+    private function translate_pidgin_to_english($text) {
+        $pidgin_to_english = array(
+            'wetin' => 'what',
+            'una' => 'you',
+            'dey' => 'is',
+            'fit' => 'can',
+            'make' => 'let',
+            'abeg' => 'please',
+            'wan' => 'want',
+            'dis' => 'this',
+            'dat' => 'that',
+            'dem' => 'them',
+            'you get' => 'do you have',
+            'e get' => 'there is',
+            'how much' => 'what is the price',
+            'how e go cost' => 'how much will it cost',
+            'wetin be' => 'what is',
+            'room wey dey available' => 'available rooms'
+        );
+        
+        foreach ($pidgin_to_english as $pidgin => $english) {
+            $text = preg_replace('/\b' . preg_quote($pidgin, '/') . '\b/i', $english, $text);
+        }
+        
+        return $text;
+    }
+
+    /**
      * Translate message based on language.
      */
     private function translate($message, $language) {
         if ($language === 'pidgin') {
-            // Simple Nigerian Pidgin translations
+            // Enhanced Nigerian Pidgin translations
             $translations = array(
                 'Hello! Welcome to' => 'Hello! Welcome to',
                 'How can I help you today?' => 'Wetin I fit do for you today?',
+                'We have' => 'We get',
+                'rooms available' => 'room wey dey available',
+                'per night' => 'for one night',
+                'Which room would you like to book?' => 'Which room you wan book?',
+                'Type:' => 'Type na:',
+                'Capacity:' => 'E fit carry:',
+                'guests' => 'people',
+                'Please' => 'Abeg',
+                'Do you have' => 'You get',
+                'Yes' => 'Yes o',
+                'No' => 'No o',
                 'We have' => 'We get',
                 'rooms available' => 'room wey dey available',
                 'Please provide your booking reference' => 'Abeg give me your booking reference',
