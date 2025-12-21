@@ -17,11 +17,19 @@
         }
         
         .pricing-header h1 {
-            font-size: 2.8rem;
-            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, #FFD700 0%, #4FC3F7 25%, #FFD700 50%, #64B5F6 75%, #FFD700 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text;
+            animation: sparkle 3s linear infinite;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            animation: sparkle 3s linear infinite;
             margin-bottom: 20px;
             font-weight: 800;
             letter-spacing: -1px;
@@ -194,7 +202,12 @@
         
         @media (max-width: 768px) {
             .pricing-header h1 {
-                font-size: 2.5rem;
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+                font-size: 1.8rem;
             }
             
             .pricing-cards {
@@ -211,6 +224,11 @@
     <div class="staydesk-pricing">
         <div class="pricing-header">
             <h1>Choose Your Plan</h1>
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
             <p>Affordable pricing for hotels of all sizes</p>
         </div>
         

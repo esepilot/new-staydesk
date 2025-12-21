@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         background: #0a0a0a;
         color: #F0F0F0;
-        font-size: 15px;
+        font-size: 14px;
         line-height: 1.6;
     }
     
@@ -70,11 +70,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
     }
     
     h1 {
-        font-size: 2.2rem;
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+        font-size: 1.8rem;
         background: linear-gradient(135deg, #D4AF37, #FFD700);
-        -webkit-background-clip: text;
+        background-size: 200% auto;
+            -webkit-background-clip: text;
+            animation: sparkle 3s linear infinite;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+            animation: sparkle 3s linear infinite;
         margin-bottom: 30px;
         text-shadow: 0 2px 12px rgba(212, 175, 55, 0.3);
     }
@@ -96,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
         margin-bottom: 8px;
         color: #FFFFFF;
         font-weight: 700;
-        font-size: 15px;
+        font-size: 14px;
     }
     
     input[type="text"],
@@ -107,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
         border: 2px solid rgba(212, 175, 55, 0.3);
         border-radius: 12px;
         color: #FFFFFF;
-        font-size: 15px;
+        font-size: 14px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
@@ -150,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
         color: #0a0a0a;
         border: none;
         border-radius: 12px;
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -168,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
         color: #D4AF37;
         border: 2px solid #D4AF37;
         border-radius: 12px;
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s;
@@ -213,6 +221,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
     <a href="<?php echo home_url('/staydesk-admin-dashboard'); ?>" class="back-link">← Back to Dashboard</a>
     
     <h1>⚙️ StayDesk Settings</h1>
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
     
     <form method="POST" action="">
         <?php wp_nonce_field('staydesk_settings_nonce'); ?>

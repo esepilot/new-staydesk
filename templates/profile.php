@@ -62,12 +62,20 @@ $subscription = $wpdb->get_row($wpdb->prepare(
         }
         
         .page-header h1 {
-            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+            background: linear-gradient(90deg, #FFD700 0%, #4FC3F7 25%, #FFD700 50%, #64B5F6 75%, #FFD700 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text;
+            animation: sparkle 3s linear infinite;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            animation: sparkle 3s linear infinite;
             font-weight: 800;
-            font-size: 2.2rem;
+            font-size: 1.8rem;
             text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
         }
         
@@ -77,7 +85,7 @@ $subscription = $wpdb->get_row($wpdb->prepare(
             border-radius: 10px;
             cursor: pointer;
             font-weight: 700;
-            font-size: 15px;
+            font-size: 14px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
@@ -123,7 +131,7 @@ $subscription = $wpdb->get_row($wpdb->prepare(
             color: #FFFFFF;
             margin-bottom: 8px;
             font-weight: 700;
-            font-size: 15px;
+            font-size: 14px;
         }
         
         .form-group input,
@@ -201,6 +209,11 @@ $subscription = $wpdb->get_row($wpdb->prepare(
     <div class="profile-container">
         <div class="page-header">
             <h1>Profile & Settings</h1>
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
             <button class="btn btn-back" onclick="window.location.href='<?php echo home_url('/staydesk-dashboard'); ?>'">← Back to Dashboard</button>
         </div>
         

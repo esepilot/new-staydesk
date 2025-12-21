@@ -23,11 +23,19 @@
         }
         
         h1 {
-            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+            background: linear-gradient(90deg, #FFD700 0%, #4FC3F7 25%, #FFD700 50%, #64B5F6 75%, #FFD700 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text;
+            animation: sparkle 3s linear infinite;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            font-size: 2.2rem;
+            animation: sparkle 3s linear infinite;
+            font-size: 1.8rem;
             font-weight: 800;
             margin: 0 0 15px 0;
             text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
@@ -35,7 +43,7 @@
         
         p {
             color: #B8B8B8;
-            font-size: 15px;
+            font-size: 14px;
             margin: 0;
             line-height: 1.6;
         }
@@ -44,6 +52,11 @@
 <body>
     <div class="admin-container">
         <h1>Admin Dashboard</h1>
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
         <p>BendlessTech platform administration.</p>
     </div>
 </body>

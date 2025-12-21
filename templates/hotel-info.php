@@ -44,12 +44,20 @@ $hotel_info = json_decode($hotel->hotel_info_json, true) ?: array();
     }
     
     .info-header h1 {
-        background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
-        -webkit-background-clip: text;
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+        background: linear-gradient(90deg, #FFD700 0%, #4FC3F7 25%, #FFD700 50%, #64B5F6 75%, #FFD700 100%);
+        background-size: 200% auto;
+            -webkit-background-clip: text;
+            animation: sparkle 3s linear infinite;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+            animation: sparkle 3s linear infinite;
         margin: 0 0 10px 0;
-        font-size: 2.2rem;
+        font-size: 1.8rem;
         font-weight: 800;
         text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
     }
@@ -57,7 +65,7 @@ $hotel_info = json_decode($hotel->hotel_info_json, true) ?: array();
     .info-header p {
         color: #B8B8B8;
         margin: 0;
-        font-size: 15px;
+        font-size: 14px;
     }
     
     .accordion-section {
@@ -293,6 +301,11 @@ $hotel_info = json_decode($hotel->hotel_info_json, true) ?: array();
     
     <div class="info-header">
         <h1>🏨 Hotel Information & FAQs</h1>
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
         <p>Fill in your hotel details so guests get accurate information from the chatbot</p>
     </div>
     

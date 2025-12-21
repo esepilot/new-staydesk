@@ -45,14 +45,22 @@
         }
         
         .hero-content h1 {
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
             font-size: 3.8rem;
             font-weight: 900;
             margin-bottom: 30px;
             line-height: 1.1;
             background: linear-gradient(135deg, #D4AF37 0%, #FFD700 50%, #D4AF37 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text;
+            animation: sparkle 3s linear infinite;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            animation: sparkle 3s linear infinite;
             letter-spacing: -2px;
             text-shadow: 0 2px 12px rgba(212, 175, 55, 0.3);
         }
@@ -77,7 +85,7 @@
         
         .btn-primary, .btn-secondary {
             padding: 15px 40px;
-            font-size: 15px;
+            font-size: 14px;
             border-radius: 12px;
             text-decoration: none;
             display: inline-block;
@@ -242,7 +250,12 @@
         
         @media (max-width: 768px) {
             .hero-content h1 {
-                font-size: 2.5rem;
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+                font-size: 1.8rem;
             }
             
             .hero-content p {
@@ -261,6 +274,11 @@
         <section class="hero-section">
             <div class="hero-content">
                 <h1>Welcome to StayDesk</h1>
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
                 <p>The Ultimate Hotel Management Platform for Nigerian Hotels</p>
                 <div class="cta-buttons">
                     <a href="<?php echo home_url('/staydesk-signup'); ?>" class="btn-primary">Get Started</a>
