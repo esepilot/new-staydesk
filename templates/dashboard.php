@@ -46,20 +46,27 @@ $dashboard_data = Staydesk_Dashboard::get_dashboard_data($hotel->id);
         }
         
         .header-left h1 {
-            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            background: linear-gradient(90deg, #FFD700 0%, #4FC3F7 25%, #FFD700 50%, #64B5F6 75%, #FFD700 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            animation: sparkle 3s linear infinite;
             margin-bottom: 8px;
             font-weight: 800;
             letter-spacing: -0.5px;
-            font-size: 2.2rem;
+            font-size: 1.8rem;
             text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
+        }
+        
+        @keyframes sparkle {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
         }
         
         .header-left p {
             color: #B8B8B8;
-            font-size: 15px;
+            font-size: 14px;
             line-height: 1.6;
         }
         
