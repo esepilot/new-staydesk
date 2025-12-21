@@ -220,17 +220,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
 <div class="settings-container">
     <a href="<?php echo home_url('/staydesk-admin-dashboard'); ?>" class="back-link">← Back to Dashboard</a>
     
-    <h1>⚙️ StayDesk Settings</h1>
-        
-        @keyframes sparkle {
-            0% { background-position: 0% center; }
-            100% { background-position: 200% center; }
-        }
+    <h1>StayDesk Settings</h1>
     
     <form method="POST" action="">
         <?php wp_nonce_field('staydesk_settings_nonce'); ?>
         
-        <h2>🔑 Paystack Configuration</h2>
+        <h2>Paystack Configuration</h2>
         
         <div class="info-box">
             <strong>Test Mode:</strong> Use test keys for development and testing<br>
@@ -249,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
             </label>
         </div>
         
-        <h2>🧪 Test Keys (for development)</h2>
+        <h2>Test Keys (for development)</h2>
         
         <div class="form-group">
             <label for="test_public_key">Test Public Key</label>
@@ -274,8 +269,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
         </div>
         
         <div style="margin-top: 30px;">
-            <button type="submit" name="save_settings" class="btn-primary">💾 Save Settings</button>
-            <button type="button" class="btn-secondary" onclick="testPaystackConnection()">🔌 Test Connection</button>
+            <button type="submit" name="save_settings" class="btn-primary">Save Settings</button>
+            <button type="button" class="btn-secondary" onclick="testPaystackConnection()">Test Connection</button>
         </div>
     </form>
 </div>
