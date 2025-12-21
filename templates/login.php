@@ -259,7 +259,7 @@
             
             <?php if (isset($_GET['verified']) && $_GET['verified'] == '1'): ?>
                 <div class="alert alert-success" style="display: block;">
-                    ✅ Email verified successfully! You can now login.
+                    Email verified successfully! You can now login.
                 </div>
             <?php endif; ?>
             

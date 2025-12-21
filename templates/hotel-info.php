@@ -478,7 +478,7 @@ $hotel_info = json_decode($hotel->hotel_info_json, true) ?: array();
             <div class="accordion-content">
                 <div class="form-group">
                     <label>Do you serve Jollof rice? (Most important question! 🍚)</label>
-                    <input type="text" name="has_jollof" value="Yes! The best Jollof rice in Lagos! 🔥" placeholder="This is critical!">
+                    <input type="text" name="has_jollof" value="Yes! The best Jollof rice in Lagos!" placeholder="This is critical!">
                 </div>
                 
                 <div class="form-group">
@@ -565,7 +565,7 @@ $hotel_info = json_decode($hotel->hotel_info_json, true) ?: array();
         <!-- Section 6: Services & Events -->
         <div class="accordion-section">
             <div class="accordion-header" onclick="toggleAccordion(this)">
-                <h3>🎉 Services & Events</h3>
+                <h3>Services & Events</h3>
                 <span class="accordion-icon">▼</span>
             </div>
             <div class="accordion-content">

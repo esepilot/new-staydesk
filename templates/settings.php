@@ -261,7 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
             <input type="password" id="test_secret_key" name="test_secret_key" value="<?php echo esc_attr($test_secret_key); ?>" placeholder="sk_test_...">
         </div>
         
-        <h2>🚀 Live Keys (for production)</h2>
+        <h2>Live Keys (for production)</h2>
         
         <div class="form-group">
             <label for="live_public_key">Live Public Key</label>

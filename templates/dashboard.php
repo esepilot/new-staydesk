@@ -305,7 +305,7 @@ $dashboard_data = Staydesk_Dashboard::get_dashboard_data($hotel->id);
             </div>
         <?php elseif ($hotel->subscription_status === 'active'): ?>
             <div class="subscription-alert active">
-                ✅ Your subscription is active until <?php echo date('F j, Y', strtotime($hotel->subscription_expiry)); ?>
+                Active until <?php echo date('F j, Y', strtotime($hotel->subscription_expiry)); ?>
             </div>
         <?php endif; ?>
         
@@ -361,7 +361,7 @@ $dashboard_data = Staydesk_Dashboard::get_dashboard_data($hotel->id);
             </div>
             
             <div class="section-card">
-                <h2>💬 Guest Enquiries</h2>
+                <h2>Guest Enquiries</h2>
                 <p>View and respond to guest messages from the chatbot.</p>
                 <a href="#" class="btn-section">View Enquiries (<?php echo $dashboard_data['enquiries_count']; ?>)</a>
             </div>
@@ -441,7 +441,7 @@ $dashboard_data = Staydesk_Dashboard::get_dashboard_data($hotel->id);
            target="_blank" 
            class="whatsapp-toggle" 
            title="WhatsApp Support">
-            💬
+            <span style="font-size: 22px;">💬</span>
         </a>
     </div>
     
