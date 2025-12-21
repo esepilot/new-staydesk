@@ -317,7 +317,14 @@ $subscription = $wpdb->get_row($wpdb->prepare(
                     </button>
                 </div>
             <?php else: ?>
-                <p style="color: #A0A0A0;">No active subscription. <a href="<?php echo home_url('/staydesk-pricing'); ?>" style="color: #D4AF37;">Subscribe now</a></p>
+                <?php if ($hotel->subscription_status !== 'active'): ?>
+                    <p style="color: #A0A0A0;">No active subscription. <a href="<?php echo home_url('/staydesk-pricing'); ?>" style="color: #D4AF37;">Subscribe now</a></p>
+                <?php else: ?>
+                    <div style="padding: 20px; background: rgba(40, 167, 69, 0.1); border-radius: 10px; border: 1px solid rgba(40, 167, 69, 0.3);">
+                        <p style="color: #28A745; font-size: 1.1rem; margin-bottom: 10px;">✓ Subscription Active</p>
+                        <p style="color: #B8B8B8; font-size: 0.9rem;">Your subscription is currently active. Detailed information will appear once the system completes synchronization.</p>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
         

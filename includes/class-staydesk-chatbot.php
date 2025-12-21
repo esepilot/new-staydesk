@@ -36,8 +36,25 @@ class Staydesk_Chatbot {
             $session_id = 'session_' . uniqid();
         }
 
-        // Note: Subscription check removed to allow FAQ queries for all hotels
-        // Premium features may require active subscription in future updates
+        // Check hotel subscription status for full chatbot features
+        $has_active_subscription = false;
+        if ($hotel_id > 0) {
+            $table_hotels = $wpdb->prefix . 'staydesk_hotels';
+            $hotel_record = $wpdb->get_row($wpdb->prepare(
+                "SELECT subscription_status, subscription_expiry FROM $table_hotels WHERE id = %d",
+                $hotel_id
+            ));
+            
+            if ($hotel_record && $hotel_record->subscription_status === 'active') {
+                // Check if subscription is not expired
+                if (!$hotel_record->subscription_expiry || strtotime($hotel_record->subscription_expiry) > time()) {
+                    $has_active_subscription = true;
+                }
+            }
+        }
+        
+        // Note: FAQ queries work for all hotels regardless of subscription status
+        // Premium AI features can check $has_active_subscription flag
 
         // Log user message
         $table_chat_logs = $wpdb->prefix . 'staydesk_chat_logs';
