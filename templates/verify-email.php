@@ -35,7 +35,7 @@
         
         .verify-container {
             background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            padding: 55px;
+            padding: 25px;
             border-radius: 24px;
             box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
             max-width: 500px;
@@ -59,22 +59,23 @@
         
         .verify-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
         
         .verify-header h1 {
             margin: 0 0 15px 0;
-            font-size: 36px;
+            font-size: 2.2rem;
             font-weight: 700;
             background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             letter-spacing: -1px;
+            text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
         }
         
         .verify-header p {
-            color: #A0A0A0;
+            color: #B8B8B8;
             font-size: 15px;
             margin: 0;
             line-height: 1.6;
@@ -95,7 +96,15 @@
         }
         
         .form-group {
-            margin-bottom: 28px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #FFFFFF;
+            font-weight: 700;
+            font-size: 15px;
         }
         
         .form-group label {

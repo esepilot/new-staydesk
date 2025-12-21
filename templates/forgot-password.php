@@ -35,7 +35,7 @@
         
         .forgot-container {
             background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            padding: 55px;
+            padding: 25px;
             border-radius: 24px;
             box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
             max-width: 520px;
@@ -48,7 +48,7 @@
         
         .forgot-header {
             text-align: center;
-            margin-bottom: 45px;
+            margin-bottom: 30px;
         }
         
         .forgot-header h1 {
@@ -56,26 +56,28 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            font-size: 2.3rem;
+            font-size: 2.2rem;
             margin-bottom: 12px;
             font-weight: 800;
             letter-spacing: -0.5px;
+            text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
         }
         
         .forgot-header p {
-            color: #A0A0A0;
-            font-size: 1.05rem;
+            color: #B8B8B8;
+            font-size: 15px;
         }
         
         .form-group {
-            margin-bottom: 28px;
+            margin-bottom: 20px;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: #FFFFFF;
             font-weight: 700;
+            font-size: 15px;
             letter-spacing: 0.3px;
         }
         

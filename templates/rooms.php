@@ -52,14 +52,14 @@ $room_types = $wpdb->get_results($wpdb->prepare(
         
         .page-header {
             background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            padding: 35px;
+            padding: 25px;
             border-radius: 18px;
-            margin-bottom: 35px;
+            margin-bottom: 30px;
             box-shadow: 0 6px 30px rgba(0, 0, 0, 0.6);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            border: 1px solid rgba(212, 175, 55, 0.3);
         }
         
         .page-header h1 {
@@ -68,17 +68,18 @@ $room_types = $wpdb->get_results($wpdb->prepare(
             -webkit-text-fill-color: transparent;
             background-clip: text;
             font-weight: 800;
-            font-size: 2.5rem;
+            font-size: 2.2rem;
+            text-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
         }
         
         .btn {
-            padding: 14px 28px;
+            padding: 15px 30px;
             border: none;
             border-radius: 10px;
             cursor: pointer;
             font-weight: 700;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            font-size: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .btn-primary {
